@@ -10,10 +10,10 @@ object Main {
 
     // 1. Téléchargement automatique du fichier parquet
     val parquetUrl =
-      "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-03.parquet"
+      "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-05.parquet"
 
     val localDir = "data/raw"
-    val localPath = s"$localDir/yellow_tripdata_2025-03.parquet"
+    val localPath = s"$localDir/yellow_tripdata_2025-05.parquet"
 
     Files.createDirectories(Paths.get(localDir))
     new URL(parquetUrl).openStream()
@@ -36,12 +36,12 @@ object Main {
     // 4. Écriture vers MinIO
     df.write
       .mode("overwrite")
-      .parquet("s3a://nyc-raw/yellow_tripdata_2025-03")
+      .parquet("s3a://nyc-raw/yellow_tripdata_2025-05")
 
     spark.stop()
   }
 
-  // Petit helper pour gérer le stream proprement
+  // Petit helper pour gérsber le stream proprement
   implicit class AutoClose[A <: AutoCloseable](resource: A) {
     def pipe[B](f: A => B): B =
       try f(resource) finally resource.close()
