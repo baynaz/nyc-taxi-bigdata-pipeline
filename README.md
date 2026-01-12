@@ -1,28 +1,46 @@
-Le code minimal pour faire fonctionner un code avec Minio :
-```scala
-import org.apache.spark.sql.{SparkSession, DataFrame}
+## NYC Taxi Big Data Pipeline
 
-object SparkApp extends App {
-  val spark = SparkSession.builder()
-    .appName("SparkApp")
-    .master("local")
-    .config("fs.s3a.access.key", "minio")
-    .config("fs.s3a.secret.key", "minio123")
-    .config("fs.s3a.endpoint", "http://localhost:9000/") // A changer lors du déploiement
-    .config("fs.s3a.path.style.access", "true")
-    .config("fs.s3a.connection.ssl.enable", "false")
-    .config("fs.s3a.attempts.maximum", "1")
-    .config("fs.s3a.connection.establish.timeout", "6000")
-    .config("fs.s3a.connection.timeout", "5000")
-    .getOrCreate()
-  spark.sparkContext.setLogLevel("WARN")
+Big Data Project 
+This project aims to deploy a Big Data architecture to collect, ingest, process and exploit NYC Yellow Taxi data.
 
-}
+---
+
+## Data collection and data integration
+
+- **Data source**: NYC Taxi & Limousine Commission (Parquet files) https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+- **Processing engine**: Apache Spark (Scala)
+- **Data Lake**: MinIO (S3-compatible storage)
+- **Local orchestration**: Docker Compose
+
+Data flow:
+NYC Website → Automated Download → Spark → MinIO (Data Lake)
+
+## Requirements (manual setup)
+
+- **Java 11**
+- **Docker**
+- **Docker Compose**
+- **sbt**
+- **Git**
+- **IntelliJ IDEA + Scala plugin** (Pour le plugin, dans Intellij :Settings → Plugins → Marketplace → Scala → Install)
+
+Quick checks:
+```bash
+java -version
+docker --version
+docker compose version
+sbt --version
+```
+---
+Run Exercise 1
+```bash
+git clone <REPOSITORY_URL>
+cd nyc-taxi-bigdata-pipeline/ex01_data_retrieval
+chmod +x run_exo1.sh
+./run_exo1.sh
 ```
 
-## Modalités de rendu
 
-1. Pull Request vers la branch `master`
-2. Dépot du rapport et du code source zippé dans cours.cyu.fr (Les accès seront bientôt ouverts)
 
-Date limite de rendu : 7 février 2026
+
+
