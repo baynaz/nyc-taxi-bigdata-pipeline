@@ -16,9 +16,11 @@ sleep 5
 
 echo "[3/4] Configuring MinIO client..."
 mc alias set ${MINIO_ALIAS} http://localhost:9000 minio minio123
+mc ls ${MINIO_ALIAS}
 
 echo "[4/4] Creating bucket if not exists..."
 mc mb ${MINIO_ALIAS}/${BUCKET_NAME} || true
+mc ls ${MINIO_ALIAS}
 
 echo "[5/5] Running Spark ingestion job..."
 sbt run
