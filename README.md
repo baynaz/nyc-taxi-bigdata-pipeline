@@ -89,9 +89,7 @@ java -version
 docker --version
 docker compose version
 sbt --version
-mc mb localminio/nyc-raw
-mc ls localminio
-mc cp file.parquet localminio/nyc-raw/
+mc --version
 docker ps
 ```
 4. Mark **ex01_data_retrieval/src/main/scala** as Sources Root:
