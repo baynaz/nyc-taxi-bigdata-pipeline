@@ -51,3 +51,49 @@ minio-data
 
 ### Hadoop ###
 hadoop
+
+####################################
+# Big Data Project – Data folders
+####################################
+
+# Raw & processed data (DO NOT PUSH)
+data/raw/*.parquet
+data/external/*
+data/interim/*
+data/processed/*
+
+# Keep folder structure
+!data/raw/.gitkeep
+!data/external/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+
+####################################
+# Spark / Big Data runtime
+####################################
+spark-warehouse/
+derby.log
+
+####################################
+# Python (Exercise 5)
+####################################
+__pycache__/
+*.pyc
+.venv/
+.env
+
+####################################
+# Jupyter
+####################################
+.ipynb_checkpoints/
+
+####################################
+# Logs
+####################################
+*.log
+
+# IntelliJ full config
+.idea/
+
+# MinIO client binary
+mc

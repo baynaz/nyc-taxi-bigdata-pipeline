@@ -1,6 +1,6 @@
 services:
   spark-master:
-    build: ./docker
+    build: ./Docker
     container_name: spark-master
     environment:
       - SPARK_MODE=master
@@ -21,7 +21,7 @@ services:
       retries: 10
 
   spark-worker-1:
-    build: ./docker
+    build: ./Docker
     container_name: spark-worker-1
     depends_on:
       - spark-master
@@ -42,7 +42,7 @@ services:
       - spark-network
 
   spark-worker-2:
-    build: ./docker
+    build: ./Docker
     container_name: spark-worker-2
     depends_on:
       - spark-master
@@ -66,7 +66,7 @@ services:
   minio:
     hostname: minio
     container_name: minio
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: minio/minio:latest
     ports:
       - '9000:9000'  # Changed from 9000 to avoid HDFS conflict
       - '9001:9001'

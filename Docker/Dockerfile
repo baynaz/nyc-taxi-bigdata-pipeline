@@ -1,7 +1,7 @@
 # This Dockerfile is taken from https://github.com/mvillarrealb/docker-spark-cluster/blob/master/docker-compose.yml
 # and updated to install the Scala 2.13 version of Spark 3.2.0
 
-FROM eclipse-temurin:21-jre-jammy as builder
+FROM eclipse-temurin:11 as builder
 
 # Add Dependencies for PySpark
 
