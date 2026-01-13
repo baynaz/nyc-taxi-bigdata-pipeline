@@ -66,9 +66,11 @@ without any manual action.
   <img width="1021" height="328" alt="image" src="https://github.com/user-attachments/assets/1429cbf4-ad6a-49a6-ac1e-44ed73f7825b" />
   <img width="406" height="591" alt="image" src="https://github.com/user-attachments/assets/641ec5c8-bd34-4c0a-a39d-6f3b8fde234b" />
   
-- MinIO client (`mc`)
+- Installing MinIO client (`mc`) on Linux:
 ```bash
-mc alias set localminio http://localhost:9000 minio minio123
+wget https://dl.min.io/client/mc/release/linux-amd64/mc
+chmod +x mc
+sudo mv mc /usr/local/bin/
 ```
 
 ---
