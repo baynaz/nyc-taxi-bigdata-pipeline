@@ -90,6 +90,7 @@ sbt --version
 mc mb localminio/nyc-raw
 mc ls localminio
 mc cp file.parquet localminio/nyc-raw/
+docker ps
 ```
 4. Mark **ex01_data_retrieval/src/main/scala** as Sources Root:
    4.1. On intellij interface, go to **ex01_data_retrieval/src/main/scala**, right click - select 'Mark Directory as' - select 'Sources Root'
