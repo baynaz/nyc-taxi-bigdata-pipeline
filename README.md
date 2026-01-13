@@ -12,8 +12,43 @@ This project aims to deploy a Big Data architecture to collect, ingest, process 
 - **Data Lake**: MinIO (S3-compatible storage)
 - **Local orchestration**: Docker Compose
 
-Data flow:
-NYC Website → Automated Download → Spark → MinIO (Data Lake)
+**Data flow:** NYC Website → Automated Download → Spark → MinIO (Data Lake)
+
+---
+
+## MinIO – Data Lake Configuration
+
+MinIO is used as the **Data Lake** of this project.  
+It is an S3-compatible object storage service that allows Spark to store and read
+Parquet files in the same way as AWS S3.
+
+### MinIO services
+
+When Docker Compose is started, MinIO exposes:
+- **API endpoint**: http://localhost:9000  
+- **Web console**: http://localhost:9001  
+
+Default credentials (defined in `docker-compose.yml`):
+- Username: `minio`
+- Password: `minio123`
+The MinIO web interface can be used to visually inspect buckets and uploaded files.
+
+---
+
+### MinIO bucket
+- Bucket name used in this project: **`nyc-raw`**
+- This bucket stores the **raw NYC Taxi Parquet data**
+
+The script `run_exo1.sh` automatically:
+1. Starts the MinIO service using Docker Compose
+2. Configures a MinIO client alias
+3. Creates the `nyc-raw` bucket if it does not already exist
+4. Runs the Spark ingestion job
+
+This ensures that all team members use the **same configuration**
+without any manual action.
+
+---
 
 # Requirements (manual setup)
 
@@ -30,6 +65,11 @@ NYC Website → Automated Download → Spark → MinIO (Data Lake)
 - **Scala SDK**: files - Project Structure - Librairy - '+' - Scala SDK + select 'SDKMAN! 2.13.17' - download - select 'version 2.13.17' - apply - ok 
   <img width="1021" height="328" alt="image" src="https://github.com/user-attachments/assets/1429cbf4-ad6a-49a6-ac1e-44ed73f7825b" />
   <img width="406" height="591" alt="image" src="https://github.com/user-attachments/assets/641ec5c8-bd34-4c0a-a39d-6f3b8fde234b" />
+  
+- MinIO client (`mc`)
+```bash
+mc alias set localminio http://localhost:9000 minio minio123
+```
 
 ---
 # Run Exercise 1
@@ -37,9 +77,9 @@ NYC Website → Automated Download → Spark → MinIO (Data Lake)
    1.1. file - new - Project from Version Control
    1.2. Copy paste this repository URL then click on 'clone'
    1.3. select the branch **zaynab** or on terminal write this command :
-   ```bash
-   git checkout zaynab
-   ```
+```bash
+git checkout zaynab
+```
 2. Set the Manual Setup listed above
 3. Quick checks:
 ```bash
@@ -47,6 +87,9 @@ java -version
 docker --version
 docker compose version
 sbt --version
+mc mb localminio/nyc-raw
+mc ls localminio
+mc cp file.parquet localminio/nyc-raw/
 ```
 4. Mark **ex01_data_retrieval/src/main/scala** as Sources Root:
    4.1. On intellij interface, go to **ex01_data_retrieval/src/main/scala**, right click - select 'Mark Directory as' - select 'Sources Root'
@@ -57,6 +100,16 @@ chmod +x run_exo1.sh
 ./run_exo1.sh
 run
 ```
+---
+# Expected Result
+
+After successful execution:
+- MinIO contains a bucket named nyc-raw
+- Spark-generated Parquet files are available in the bucket:
+nyc-raw/
+ └── yellow_tripdata_2023-01/
+      ├── part-*.parquet
+      └── _SUCCESS
 
 
 
