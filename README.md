@@ -101,15 +101,25 @@ chmod +x run_exo1.sh
 ./run_exo1.sh
 run
 ```
+6. Fixing IllegalAccessError in IntelliJ
+If you encounter IllegalAccessError in IntelliJ, you need to add an extra VM option:
+- Click on the three vertical dots in your run/debug configuration.
+- From the dropdown Modify Options, select Add VM Option.
+- Add the following line: (`--add-exports java.base/sun.nio.ch=ALL-UNNAMED`)
+This will allow your code to access internal Java modules that would otherwise cause IllegalAccessError.
 ---
+
 # Expected Result
 
 After successful execution:
 - MinIO contains a bucket named nyc-raw
 - Spark-generated Parquet files are available in the bucket:
 nyc-raw/
+
  └── yellow_tripdata_2023-01/
+
       ├── part-*.parquet
+  
       └── _SUCCESS
 
 
