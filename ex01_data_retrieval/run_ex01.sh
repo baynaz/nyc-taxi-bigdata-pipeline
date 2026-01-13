@@ -1,14 +1,26 @@
 #!/bin/bash
 set -e
 
+BUCKET_NAME="nyc-raw"
+MINIO_ALIAS="localminio"
+
 echo "======================================="
 echo " NYC Taxi Big Data – Exercise 1 Runner "
 echo "======================================="
 
-echo "[1/2] Starting MinIO infrastructure..."
+echo "[1/4] Starting MinIO infrastructure..."
 docker compose up -d
 
-echo "[2/2] Running Spark ingestion job (Exercise 1)..."
+echo "[2/4] Waiting for MinIO to be ready..."
+sleep 5
+
+echo "[3/4] Configuring MinIO client..."
+mc alias set ${MINIO_ALIAS} http://localhost:9000 minio minio123
+
+echo "[4/4] Creating bucket if not exists..."
+mc mb ${MINIO_ALIAS}/${BUCKET_NAME} || true
+
+echo "[5/5] Running Spark ingestion job..."
 sbt run
 
 echo "======================================="
