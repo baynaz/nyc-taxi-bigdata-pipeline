@@ -123,6 +123,47 @@ nyc-raw/
       └── _SUCCESS
 
 
+## Exercice 3 : Configuration et Initialisation du Data Warehouse
+
+Cette étape détaille la procédure pour connecter l'IDE (IntelliJ) au conteneur PostgreSQL et exécuter les scripts de création et de remplissage des tables du Data Warehouse.
+
+### 1. Connexion à la Base de Données (IntelliJ)
+
+1.  Ouvrir l'onglet **Database** situé sur le panneau vertical droit d'IntelliJ.
+2.  Cliquer sur **`+` (New)** > **Data Source** > **PostgreSQL**.
+3.  Configurer la connexion avec les paramètres définis dans le `docker-compose.yml` :
+    * **Host** : `localhost`
+    * **Port** : `5432`
+    * **User** : `postgres`
+    * **Password** : `postgres`
+    * **Database** : `taxidb`
+4.  Cliquer sur **Test Connection** (télécharger les drivers si demandé).
+5.  Si le test affiche "Succeeded", cliquer sur **OK**.
+
+### 2. Exécution des Scripts SQL
+
+L'interaction avec la base de données se fait via une **Query Console** :
+* *Clic-droit* sur la connexion `taxidb@localhost` > **New** > **Query Console**.
+
+#### Étape A : Création de la structure
+1.  Ouvrir le fichier `ex03_sql_table_creation/creation.sql` et copier son contenu.
+2.  Coller le code SQL dans la console IntelliJ.
+3.  Sélectionner tout le texte (`Ctrl+A`) et exécuter avec le bouton **Play ▶️** (ou `Ctrl + Entrée`).
+4.  **Vérification** : L'onglet "Output" doit afficher la confirmation de création des tables.
+
+#### Étape B : Insertion des données de référence
+1.  Effacer la console ou en ouvrir une nouvelle.
+2.  Coller le contenu du fichier `ex03_sql_table_creation/insertion.sql` (contenant les données statiques : Vendors, Boroughs, etc.).
+3.  Exécuter le script via le bouton **Play ▶️**.
+4.  **Vérification** : S'assurer qu'aucune erreur n'apparaît dans l'onglet "Output".
+
+### 3. Vérification Finale
+
+Pour valider que le Data Warehouse est correctement initialisé :
+1.  Dans le panneau **Database**, cliquer sur **Rafraîchir** (🔄).
+2.  Naviguer dans l'arborescence : `taxidb@localhost` > `taxidb` > `public` > `tables`.
+3.  Les 6 tables doivent apparaître (`DVendor`, `Trips`, `Location_table`, etc.).
+4.  Effectuer un double-clic sur une table (ex: `Vendor`) pour confirmer qu'elle contient bien les données.
 
 
 

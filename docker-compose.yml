@@ -78,7 +78,24 @@ services:
     command: server /data --console-address ":9001"
     networks:
       - spark-network
+  
+  postgres:
+    image: postgres:15
+    container_name: warehouse_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=taxidb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - spark-network
 
 networks:
   spark-network:
     driver: bridge
+
+volumes:
+  postgres_data:
