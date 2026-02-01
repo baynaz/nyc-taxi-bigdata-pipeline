@@ -189,7 +189,6 @@ To confirm that the Data Warehouse is correctly initialized:
 
 ---
 # Exercise 4:Data visualization
-# Exercise 4: Data Visualization
 
 This module provides an interactive dashboard to analyze the NYC Taxi data stored in the PostgreSQL Data Warehouse. It visualizes Key Performance Indicators (KPIs), vendor market shares, payment methods, and top pickup locations.
 
@@ -239,8 +238,10 @@ Windows: nyc-taxi-bigdata-pipeline\.venv\Scripts\python.exe
 
 Click OK and Apply.
 
-###3 Running the Dashboard
+### 3 Running the Dashboard
+```bash
 uv run streamlit run ex04_dashboard/dashboard.py
+```
 ---
 # Exercise 5:Machine Learning Model Implementation
 ---
