@@ -189,6 +189,58 @@ To confirm that the Data Warehouse is correctly initialized:
 
 ---
 # Exercise 4:Data visualization
+# Exercise 4: Data Visualization
+
+This module provides an interactive dashboard to analyze the NYC Taxi data stored in the PostgreSQL Data Warehouse. It visualizes Key Performance Indicators (KPIs), vendor market shares, payment methods, and top pickup locations.
+
+### 🛠️ Technical Stack
+* **Language:** Python 3.10+
+* **Framework:** Streamlit
+* **Visualization:** Plotly Express
+* **Data Manipulation:** Pandas & SQLAlchemy
+* **Dependency Manager:** `uv` (for speed and reproducibility)
+
+---
+
+### 🚀 Installation & Setup
+
+We use **`uv`** to manage Python dependencies strictly and efficiently. This ensures everyone uses the exact same library versions.
+
+#### 1. Install `uv` (if not already installed)
+If you don't have `uv` installed on your machine:
+```bash
+# On Mac/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows (PowerShell)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+#### 2. Install Project Dependencies
+```bash
+uv sync
+```
+
+
+IDE Configuration (IntelliJ IDEA)
+To ensure the IDE recognizes the installed libraries (and avoids red underlining), please configure the Python Interpreter:
+
+Go to File > Project Structure > SDKs.
+
+Click + > Add Python SDK > Virtual Environment.
+
+Select Existing environment.```
+
+In the "Interpreter" field, browse and select the python executable located inside your project folder:
+
+Linux/Mac: nyc-taxi-bigdata-pipeline/.venv/bin/python
+
+Windows: nyc-taxi-bigdata-pipeline\.venv\Scripts\python.exe
+
+Click OK and Apply.
+
+###3 Running the Dashboard
+uv run streamlit run ex04_dashboard/dashboard.py
 ---
 # Exercise 5:Machine Learning Model Implementation
 ---
