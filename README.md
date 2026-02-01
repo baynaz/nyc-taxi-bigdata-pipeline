@@ -90,13 +90,10 @@ sudo mv mc /usr/local/bin/
 
 ---
 # Run Exercise 1: Data Collection and Integration
-1. Create the project in Intellij as a Project from Version Control :
-   1.1. file - new - Project from Version Control
-   1.2. Copy paste this repository URL then click on 'clone'
-   1.3. select the branch **zaynab** or on terminal write this command :
-```bash
-git checkout zaynab
-```
+1. Create the project in IntelliJ as a Project from Version Control:
+   - Go to **File → New → Project from Version Control**
+   - Copy and paste this repository URL, then click **Clone**
+   - Select the branch **main**
 2. Set the Manual Setup listed above
 3. Quick checks:
 ```bash
