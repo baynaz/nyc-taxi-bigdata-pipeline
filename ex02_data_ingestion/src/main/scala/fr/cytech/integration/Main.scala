@@ -22,7 +22,7 @@ object Main {
 
     // 2. Lecture du Parquet brut depuis Minio
     val rawDf = spark.read.parquet(
-      "s3a://nyc-raw/yellow_tripdata_2025-06"
+      "s3a://nyc-raw/yellow_tripdata_2025-01"
     )
 
 
@@ -39,8 +39,9 @@ object Main {
     cleanDf.write
       .mode("overwrite")
       .parquet(
-        "s3a://nyc-clean/yellow_tripdata_2025-06-clean"
+        "s3a://nyc-clean/yellow_tripdata_2025-01-clean"
       )
+
 
     // 5. Arrêt propre de Spark
     spark.stop()
