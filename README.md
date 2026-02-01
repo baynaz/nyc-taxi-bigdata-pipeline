@@ -1,8 +1,23 @@
-## NYC Taxi Big Data Pipeline
+# NYC Taxi Big Data Pipeline
 
 Big Data Project 
 This project aims to deploy a Big Data architecture to collect, ingest, process and exploit NYC Yellow Taxi data.
 
+---
+
+## Table of Contents
+
+1. [Data Collection and Data Integration](#data-collection-and-data-integration)  
+2. [MinIO – Data Lake Configuration](#minio--data-lake-configuration)  
+   - [MinIO Services](#minio-services)  
+   - [MinIO Bucket](#minio-bucket)  
+3. [Requirements (Manual Setup)](#requirements-manual-setup)  
+4. [Run Exercise 1: Data Collection and Integration](#run-exercise-1-data-collection-and-integration)  
+5. [Run Exercise 2: Data Cleaning and Multi-Branch Ingestion](#run-exercise-2-data-cleaning-and-multi-branch-ingestion)  
+6. [Exercise 3: Data Warehouse Configuration and Initialization](#exercise-3-data-warehouse-configuration-and-initialization)  
+7. [Exercice 4:Data visualization]
+8. [Exercice 5:Machine Learning Model Implementation]
+9. [Exercice 6:Airflow Automation]
 ---
 
 ## Data collection and data integration
@@ -115,7 +130,7 @@ After successful execution:
 - Spark-generated Parquet files are available in the bucket:
 nyc-raw/
 
- --
+---
 # Run Exercise 2: Data Cleaning and Multi-Branch Ingestion
 
 Run run_ex02.sh
@@ -129,7 +144,7 @@ run
 You should see a new bucket nyc-clean on your minio session.
 
 
---
+---
 # Exercise 3: Data Warehouse Configuration and Initialization
 
 This step details the procedure to connect the IDE (IntelliJ) to the PostgreSQL container and execute the scripts to create and populate the Data Warehouse tables.
