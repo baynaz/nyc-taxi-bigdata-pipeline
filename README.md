@@ -105,7 +105,8 @@ mc --version
 docker ps
 ```
 4. Mark **ex01_data_retrieval/src/main/scala** as Sources Root:
-   4.1. On intellij interface, go to **ex01_data_retrieval/src/main/scala**, right click - select 'Mark Directory as' - select 'Sources Root'
+   - On intellij interface, go to **ex01_data_retrieval/src/main/scala**,
+   - right click, select **Mark Directory as**, select **Sources Root**
 5. Run run_ex01.sh
 ```bash
 cd nyc-taxi-bigdata-pipeline/ex01_data_retrieval
