@@ -15,9 +15,9 @@ This project aims to deploy a Big Data architecture to collect, ingest, process 
 4. [Run Exercise 1: Data Collection and Integration](#run-exercise-1-data-collection-and-integration)  
 5. [Run Exercise 2: Data Cleaning and Multi-Branch Ingestion](#run-exercise-2-data-cleaning-and-multi-branch-ingestion)  
 6. [Exercise 3: Data Warehouse Configuration and Initialization](#exercise-3-data-warehouse-configuration-and-initialization)  
-7. [Exercice 4:Data visualization]
-8. [Exercice 5:Machine Learning Model Implementation]
-9. [Exercice 6:Airflow Automation]
+7. [Exercise 4:Data visualization](Exercise-4:Data-visualization)
+8. [Exercise 5:Machine Learning Model Implementation](Exercise-5:Machine-Learning-Model-Implementation)
+9. [Exercise 6:Airflow Automation](Exercise-6:Airflow-Automation)
 ---
 
 ## Data collection and data integration
@@ -187,3 +187,11 @@ To confirm that the Data Warehouse is correctly initialized:
 2. Navigate through the tree: `taxidb@localhost` > `taxidb` > `public` > `tables`.  
 3. The 6 tables should appear (`DVendor`, `Trips`, `Location_table`, etc.).  
 4. Double-click a table (e.g., `Vendor`) to confirm it contains the data.
+
+
+---
+# Exercise 4:Data visualization
+---
+# Exercise 5:Machine Learning Model Implementation
+---
+# Exercise 6:Airflow Automation
