@@ -74,7 +74,7 @@ sudo mv mc /usr/local/bin/
 ```
 
 ---
-# Run Exercise 1
+# Run Exercise 1: Data Collection and Integration
 1. Create the project in Intellij as a Project from Version Control :
    1.1. file - new - Project from Version Control
    1.2. Copy paste this repository URL then click on 'clone'
@@ -116,8 +116,8 @@ After successful execution:
 - Spark-generated Parquet files are available in the bucket:
 nyc-raw/
 
- 
-# Run Ex02
+ --
+# Run Exercise 2: Data Cleaning and Multi-Branch Ingestion
 
 Run run_ex02.sh
 ```bash
@@ -126,51 +126,47 @@ chmod +x run_ex02.sh
 ./run_ex02.sh
 run
 ```
-You should see a new bucket nyc-clean on your minio session
+You should see a new bucket nyc-clean on your minio session.
+--
+# Exercise 3: Data Warehouse Configuration and Initialization
 
-# Exercice 3 : Configuration et Initialisation du Data Warehouse
+This step details the procedure to connect the IDE (IntelliJ) to the PostgreSQL container and execute the scripts to create and populate the Data Warehouse tables.
 
-Cette étape détaille la procédure pour connecter l'IDE (IntelliJ) au conteneur PostgreSQL et exécuter les scripts de création et de remplissage des tables du Data Warehouse.
+## 1. Connecting to the Database (IntelliJ)
 
-### 1. Connexion à la Base de Données (IntelliJ)
+1. Open the **Database** tab located on the right vertical panel in IntelliJ.  
+2. Click **`+` (New)** > **Data Source** > **PostgreSQL**.  
+3. Configure the connection with the parameters defined in `docker-compose.yml`:  
+   - **Host**: `localhost`  
+   - **Port**: `5432`  
+   - **User**: `postgres`  
+   - **Password**: `postgres`  
+   - **Database**: `taxidb`  
+4. Click **Test Connection** (download drivers if prompted).  
+5. If the test shows "Succeeded", click **OK**.  
 
-1.  Ouvrir l'onglet **Database** situé sur le panneau vertical droit d'IntelliJ.
-2.  Cliquer sur **`+` (New)** > **Data Source** > **PostgreSQL**.
-3.  Configurer la connexion avec les paramètres définis dans le `docker-compose.yml` :
-    * **Host** : `localhost`
-    * **Port** : `5432`
-    * **User** : `postgres`
-    * **Password** : `postgres`
-    * **Database** : `taxidb`
-4.  Cliquer sur **Test Connection** (télécharger les drivers si demandé).
-5.  Si le test affiche "Succeeded", cliquer sur **OK**.
+## 2. Executing the SQL Scripts
 
-### 2. Exécution des Scripts SQL
+Interaction with the database is done via a **Query Console**:  
+*Right-click* on the connection `taxidb@localhost` > **New** > **Query Console**.  
 
-L'interaction avec la base de données se fait via une **Query Console** :
-* *Clic-droit* sur la connexion `taxidb@localhost` > **New** > **Query Console**.
+### Step A: Creating the structure
+1. Open the file `ex03_sql_table_creation/creation.sql` and copy its contents.  
+2. Paste the SQL code into the IntelliJ console.  
+3. Select all text (`Ctrl+A`) and run it using the **Play ▶️** button (or `Ctrl + Enter`).  
+4. **Verification**: The "Output" tab should display confirmation that the tables were created.  
 
-#### Étape A : Création de la structure
-1.  Ouvrir le fichier `ex03_sql_table_creation/creation.sql` et copier son contenu.
-2.  Coller le code SQL dans la console IntelliJ.
-3.  Sélectionner tout le texte (`Ctrl+A`) et exécuter avec le bouton **Play ▶️** (ou `Ctrl + Entrée`).
-4.  **Vérification** : L'onglet "Output" doit afficher la confirmation de création des tables.
+### Step B: Inserting reference data
+1. Clear the console or open a new one.  
+2. Paste the contents of the file `ex03_sql_table_creation/insertion.sql` (which contains static data: Vendors, Boroughs, etc.).  
+3. Run the script using the **Play ▶️** button.  
+   ![SQL Script Output](https://github.com/user-attachments/assets/1f0d7374-5411-4176-b0e8-f67c8ce43c2b)  
+4. **Verification**: Ensure no errors appear in the "Output" tab.  
 
-#### Étape B : Insertion des données de référence
-1.  Effacer la console ou en ouvrir une nouvelle.
-2.  Coller le contenu du fichier `ex03_sql_table_creation/insertion.sql` (contenant les données statiques : Vendors, Boroughs, etc.).
-3.  Exécuter le script via le bouton **Play ▶️**.
-   <img width="1161" height="442" alt="image" src="https://github.com/user-attachments/assets/1f0d7374-5411-4176-b0e8-f67c8ce43c2b" />
+## 3. Final Verification
 
-5.  **Vérification** : S'assurer qu'aucune erreur n'apparaît dans l'onglet "Output".
-
-### 3. Vérification Finale
-
-Pour valider que le Data Warehouse est correctement initialisé :
-1.  Dans le panneau **Database**, cliquer sur **Rafraîchir** (🔄).
-2.  Naviguer dans l'arborescence : `taxidb@localhost` > `taxidb` > `public` > `tables`.
-3.  Les 6 tables doivent apparaître (`DVendor`, `Trips`, `Location_table`, etc.).
-4.  Effectuer un double-clic sur une table (ex: `Vendor`) pour confirmer qu'elle contient bien les données.
-
-
-
+To confirm that the Data Warehouse is correctly initialized:  
+1. In the **Database** panel, click **Refresh** (🔄).  
+2. Navigate through the tree: `taxidb@localhost` > `taxidb` > `public` > `tables`.  
+3. The 6 tables should appear (`DVendor`, `Trips`, `Location_table`, etc.).  
+4. Double-click a table (e.g., `Vendor`) to confirm it contains the data.
