@@ -25,8 +25,6 @@ object Main {
       "s3a://nyc-raw/yellow_tripdata_2025-06"
     )
 
-
-
     // 3. Nettoyage / validation des données (branche 1)
     val cleanDf = rawDf
       .filter(col("passenger_count") >= 1)
