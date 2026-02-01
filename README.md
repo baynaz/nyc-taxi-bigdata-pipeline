@@ -15,9 +15,9 @@ This project aims to deploy a Big Data architecture to collect, ingest, process 
 4. [Run Exercise 1: Data Collection and Integration](#run-exercise-1-data-collection-and-integration)  
 5. [Run Exercise 2: Data Cleaning and Multi-Branch Ingestion](#run-exercise-2-data-cleaning-and-multi-branch-ingestion)  
 6. [Exercise 3: Data Warehouse Configuration and Initialization](#exercise-3-data-warehouse-configuration-and-initialization)  
-7. [Exercise 4:Data visualization](#exercise-4:Data-visualization)
-8. [Exercise 5:Machine Learning Model Implementation](#exercise-5:Machine-Learning-Model-Implementation)
-9. [Exercise 6:Airflow Automation](#exercise-6:Airflow-Automation)
+7. [Exercise 4:Data visualization](#exercise-4-data-visualization)
+8. [Exercise 5:Machine Learning Model Implementation](#exercise-5-machine-learning-model-implementation)
+9. [Exercise 6:Airflow Automation](#exercise-6-airflow-automation)
 ---
 
 ## Data collection and data integration
