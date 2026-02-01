@@ -16,13 +16,13 @@ echo "[2/5] Waiting for MinIO..."
 sleep 5
 
 echo "[3/5] Configuring MinIO client..."
-mc alias set ${MINIO_ALIAS} http://localhost:9000 minioadmin minioadmin
+mc alias set ${MINIO_ALIAS} http://localhost:9000 minio minio123
 
 echo "[4/5] Creating clean bucket if not exists..."
 mc mb ${MINIO_ALIAS}/${CLEAN_BUCKET} || true
 
 echo "[5/5] Running Spark cleaning job..."
-sbt run
+sbt
 
 echo "======================================="
 echo " Exercise 2 completed successfully "
