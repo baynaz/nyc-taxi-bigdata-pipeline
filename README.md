@@ -140,7 +140,14 @@ chmod +x run_ex02.sh
 run
 ```
 You should see a new bucket nyc-clean on your minio session.
-
+### Data ingestion into postgreSQL database
+```bash
+cd nyc-taxi-bigdata-pipeline/ex02_data_ingestion
+chmod +x run_branch2/sh
+./run_branch2.sh s3a://nyc-clean/yellow_tripdata_2025-01-clean
+run
+```
+It will put the trips into database.
 
 ---
 # Exercise 3: Data Warehouse Configuration and Initialization
