@@ -98,7 +98,7 @@ docker ps
 ```bash
 cd nyc-taxi-bigdata-pipeline/ex01_data_retrieval
 chmod +x run_exo1.sh
-./run_exo1.sh
+./run_ex01.sh
 run
 ```
 6. Fixing IllegalAccessError in IntelliJ
@@ -116,14 +116,19 @@ After successful execution:
 - Spark-generated Parquet files are available in the bucket:
 nyc-raw/
 
- └── yellow_tripdata_2023-01/
+ 
+# Run Ex02
 
-      ├── part-*.parquet
-  
-      └── _SUCCESS
+Run run_ex02.sh
+```bash
+cd nyc-taxi-bigdata-pipeline/ex02_data_ingestion
+chmod +x run_ex02.sh
+./run_ex02.sh
+run
+```
+You should see a new bucket nyc-clean on your minio session
 
-
-## Exercice 3 : Configuration et Initialisation du Data Warehouse
+# Exercice 3 : Configuration et Initialisation du Data Warehouse
 
 Cette étape détaille la procédure pour connecter l'IDE (IntelliJ) au conteneur PostgreSQL et exécuter les scripts de création et de remplissage des tables du Data Warehouse.
 
@@ -155,7 +160,9 @@ L'interaction avec la base de données se fait via une **Query Console** :
 1.  Effacer la console ou en ouvrir une nouvelle.
 2.  Coller le contenu du fichier `ex03_sql_table_creation/insertion.sql` (contenant les données statiques : Vendors, Boroughs, etc.).
 3.  Exécuter le script via le bouton **Play ▶️**.
-4.  **Vérification** : S'assurer qu'aucune erreur n'apparaît dans l'onglet "Output".
+   <img width="1161" height="442" alt="image" src="https://github.com/user-attachments/assets/1f0d7374-5411-4176-b0e8-f67c8ce43c2b" />
+
+5.  **Vérification** : S'assurer qu'aucune erreur n'apparaît dans l'onglet "Output".
 
 ### 3. Vérification Finale
 
