@@ -120,6 +120,7 @@ nyc-raw/
 # Run Exercise 2: Data Cleaning and Multi-Branch Ingestion
 
 Run run_ex02.sh
+
 ```bash
 cd nyc-taxi-bigdata-pipeline/ex02_data_ingestion
 chmod +x run_ex02.sh
@@ -127,6 +128,8 @@ chmod +x run_ex02.sh
 run
 ```
 You should see a new bucket nyc-clean on your minio session.
+
+
 --
 # Exercise 3: Data Warehouse Configuration and Initialization
 
