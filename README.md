@@ -109,8 +109,7 @@ If you encounter IllegalAccessError in IntelliJ, you need to add an extra VM opt
 This will allow your code to access internal Java modules that would otherwise cause IllegalAccessError.
 ---
 
-# Expected Result
-
+### Expected Result
 After successful execution:
 - MinIO contains a bucket named nyc-raw
 - Spark-generated Parquet files are available in the bucket:
