@@ -1,0 +1,18 @@
+[project]
+name = "nyc-taxi-ml"
+version = "0.1.0"
+description = "ML prediction service for NYC taxi fares"
+authors = [{ name = "Zaynab" }]
+dependencies = [
+    "pandas",
+    "numpy",
+    "scikit-learn",
+    "minio",
+    "pytest",
+    "flake8",
+    "pyment"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
