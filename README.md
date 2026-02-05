@@ -7,19 +7,21 @@ This project aims to deploy a Big Data architecture to collect, ingest, process 
 
 ## Table of Contents
 
-1. [Data Collection and Data Integration](#data-collection-and-data-integration)  
-2. [MinIO – Data Lake Configuration](#minio--data-lake-configuration)  
+1. [Dashboard](#dashboard)
+2. [Data Collection and Data Integration](#data-collection-and-data-integration)  
+3. [MinIO – Data Lake Configuration](#minio--data-lake-configuration)  
    - [MinIO Services](#minio-services)  
    - [MinIO Bucket](#minio-bucket)  
-3. [Requirements (Manual Setup)](#requirements-manual-setup)  
-4. [Exercise 1: Data Collection and Integration](#run-exercise-1-data-collection-and-integration)  
-5. [Exercise 2: Data Cleaning and Multi-Branch Ingestion](#run-exercise-2-data-cleaning-and-multi-branch-ingestion)  
-6. [Exercise 3: Data Warehouse Configuration and Initialization](#exercise-3-data-warehouse-configuration-and-initialization)  
-7. [Exercise 4: Data Visualization](#exercise-4-data-visualization)  
-8. [Exercise 5: Machine Learning Model Implementation](#exercise-5-machine-learning-model-implementation)  
-9. [Exercise 6: Airflow Automation](#exercise-6-airflow-automation)
+4. [Requirements (Manual Setup)](#requirements-manual-setup)  
+5. [1: Data Collection and Integration](#1-data-collection-and-integration)  
+6. [2: Data Cleaning and Multi-Branch Ingestion](#2-data-cleaning-and-multi-branch-ingestion)  
+7. [3: Data Warehouse Configuration and Initialization](#3-data-warehouse-configuration-and-initialization)  
+8. [4: Data Visualization](#4-data-visualization)  
+9. [5: Machine Learning Model Implementation](#5-machine-learning-model-implementation)
+10. [6: Airflow Automation](#6-airflow-automation)
 ---
-
+## Dashboard
+---
 ## Data collection and data integration
 
 - **Data source**: NYC Taxi & Limousine Commission (Parquet files) https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
@@ -89,7 +91,7 @@ sudo mv mc /usr/local/bin/
 ```
 
 ---
-# Run Exercise 1: Data Collection and Integration
+# 1: Data Collection and Integration
 1. Create the project in IntelliJ as a Project from Version Control:
    - Go to **File → New → Project from Version Control**
    - Copy and paste this repository URL, then click **Clone**
@@ -129,7 +131,7 @@ After successful execution:
 nyc-raw/
 
 ---
-# Run Exercise 2: Data Cleaning and Multi-Branch Ingestion
+# 2: Data Cleaning and Multi-Branch Ingestion
 
 Run run_ex02.sh
 
@@ -141,6 +143,7 @@ run
 ```
 You should see a new bucket nyc-clean on your minio session.
 ### Data ingestion into postgreSQL database
+You should execute part 3 bellow before doing this part.
 ```bash
 cd nyc-taxi-bigdata-pipeline/ex02_data_ingestion
 chmod +x run_branch2/sh
@@ -150,7 +153,7 @@ run
 It will put the trips into database.
 
 ---
-# Exercise 3: Data Warehouse Configuration and Initialization
+# 3: Data Warehouse Configuration and Initialization
 
 This step details the procedure to connect the IDE (IntelliJ) to the PostgreSQL container and execute the scripts to create and populate the Data Warehouse tables.
 
@@ -195,7 +198,7 @@ To confirm that the Data Warehouse is correctly initialized:
 
 
 ---
-# Exercise 4:Data visualization
+# 4:Data visualization
 
 This module provides an interactive dashboard to analyze the NYC Taxi data stored in the PostgreSQL Data Warehouse. It visualizes Key Performance Indicators (KPIs), vendor market shares, payment methods, and top pickup locations.
 
@@ -208,7 +211,7 @@ This module provides an interactive dashboard to analyze the NYC Taxi data store
 
 ---
 
-### 🚀 Installation & Setup
+### Installation & Setup
 
 We use **`uv`** to manage Python dependencies strictly and efficiently. This ensures everyone uses the exact same library versions.
 
@@ -250,6 +253,6 @@ Click OK and Apply.
 uv run streamlit run ex04_dashboard/dashboard.py
 ```
 ---
-# Exercise 5:Machine Learning Model Implementation
+# 5:Machine Learning Model Implementation
 ---
-# Exercise 6:Airflow Automation
+# 6:Airflow Automation
