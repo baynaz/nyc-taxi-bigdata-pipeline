@@ -110,7 +110,7 @@ docker ps
 5. Run run_ex01.sh
 ```bash
 cd nyc-taxi-bigdata-pipeline/ex01_data_retrieval
-chmod +x run_exo1.sh
+chmod +x run_ex01.sh
 ./run_ex01.sh
 run
 ```
@@ -135,8 +135,8 @@ Run run_ex02.sh
 
 ```bash
 cd nyc-taxi-bigdata-pipeline/ex02_data_ingestion
-chmod +x run_ex02.sh
-./run_ex02.sh
+chmod +x run_ex02_branch1.sh
+./run_ex02_branch1.sh
 run
 ```
 You should see a new bucket nyc-clean on your minio session.

@@ -1,0 +1,642 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# NYC Taxi – Notebook d’analyse (Exo4 enrichi)\n",
+        "\n",
+        "Objectifs :\n",
+        "- Vérifier le chargement (qualité + volumes)\n",
+        "- KPI globaux\n",
+        "- Tendances temporelles (jour / heure / weekday)\n",
+        "- Comparatifs par **mois** (YYYY-MM)\n",
+        "- Analyses business : paiements, vendors, zones, boroughs\n",
+        "- Préparer des requêtes réutilisables pour Streamlit / PowerBI\n",
+        "\n",
+        "⚠ Dataset très gros (~20M lignes) → on travaille **toujours en agrégé** et **filtré**.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "# ====== Imports & connexion DB ======\n",
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "import plotly.express as px\n",
+        "import plotly.graph_objects as go\n",
+        "from sqlalchemy import create_engine, text\n",
+        "pio.renderers.default = \"browser\"\n",
+        "\n",
+        "# Adaptez si besoin\n",
+        "DB_URL = \"postgresql://postgres:postgres@localhost:5432/taxidb\"\n",
+        "engine = create_engine(DB_URL, pool_pre_ping=True)\n",
+        "\n",
+        "def q(sql: str, params=None) -> pd.DataFrame:\n",
+        "    \"\"\"Helper: exécute une requête SQL et renvoie un DataFrame Pandas.\"\"\"\n",
+        "    return pd.read_sql(text(sql), engine, params=params or {})\n",
+        "\n",
+        "print(\"OK: engine created\")\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 1) Paramètres d'analyse\n",
+        "On choisit un ou plusieurs mois `YYYY-MM` pour faire des comparatifs.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "# Liste des mois présents\n",
+        "months_df = q(\"SELECT DISTINCT month FROM trips WHERE month IS NOT NULL ORDER BY month\")\n",
+        "months = months_df[\"month\"].tolist()\n",
+        "months\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "# Choix par défaut : tous les mois\n",
+        "# Vous pouvez mettre par ex: selected_months = [\"2025-01\", \"2025-02\"]\n",
+        "selected_months = months\n",
+        "\n",
+        "print(\"Selected months:\", selected_months)\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 2) Contrôle qualité rapide (sanity checks)\n",
+        "But : s'assurer que le nettoyage a bien été appliqué.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "checks = q(\"\"\"\n",
+        "SELECT\n",
+        "  COUNT(*) AS total_rows,\n",
+        "  SUM(CASE WHEN trip_distance <= 0 THEN 1 ELSE 0 END) AS bad_distance,\n",
+        "  SUM(CASE WHEN total_amount <= 0 THEN 1 ELSE 0 END) AS bad_total,\n",
+        "  SUM(CASE WHEN fare_amount <= 0 THEN 1 ELSE 0 END) AS bad_fare,\n",
+        "  SUM(CASE WHEN passenger_count <= 0 OR passenger_count > 9 THEN 1 ELSE 0 END) AS bad_passengers,\n",
+        "  SUM(CASE WHEN dropoff_datetime < pickup_datetime THEN 1 ELSE 0 END) AS bad_duration\n",
+        "FROM trips;\n",
+        "\"\"\")\n",
+        "checks\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 3) KPI globaux\n",
+        "- Nb courses\n",
+        "- Revenu total\n",
+        "- Prix moyen\n",
+        "- Distance moyenne\n",
+        "- Tip rate (% courses avec tip)\n",
+        "- Prix par mile moyen\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "kpi = q(\"\"\"\n",
+        "SELECT\n",
+        "  COUNT(*) AS trips,\n",
+        "  SUM(total_amount) AS revenue,\n",
+        "  AVG(total_amount) AS avg_total,\n",
+        "  AVG(trip_distance) AS avg_distance,\n",
+        "  AVG(CASE WHEN trip_distance > 0 THEN total_amount / trip_distance END) AS avg_price_per_mile,\n",
+        "  100.0 * AVG(CASE WHEN tip_amount > 0 THEN 1 ELSE 0 END) AS tip_rate_pct\n",
+        "FROM trips;\n",
+        "\"\"\")\n",
+        "kpi\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 4) Comparatif par mois (le plus important pour ta dashboard)\n",
+        "On produit une table mensuelle : volumes, revenus, prix moyen, distance, tip rate.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "monthly = q(\"\"\"\n",
+        "SELECT\n",
+        "  month,\n",
+        "  COUNT(*) AS trips,\n",
+        "  SUM(total_amount) AS revenue,\n",
+        "  AVG(total_amount) AS avg_total,\n",
+        "  AVG(trip_distance) AS avg_distance,\n",
+        "  100.0 * AVG(CASE WHEN tip_amount > 0 THEN 1 ELSE 0 END) AS tip_rate_pct\n",
+        "FROM trips\n",
+        "WHERE month IS NOT NULL\n",
+        "GROUP BY month\n",
+        "ORDER BY month;\n",
+        "\"\"\")\n",
+        "monthly.head()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "fig = px.line(monthly, x=\"month\", y=[\"trips\",\"revenue\",\"avg_total\",\"avg_distance\",\"tip_rate_pct\"], markers=True,\n",
+        "              title=\"Evolution mensuelle (volumes / revenus / moyennes / tip rate)\")\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 5) Analyse temporelle fine\n",
+        "### 5.1 Courses par jour (sur les mois sélectionnés)\n",
+        "(⚠ Si on prend tous les mois, ça reste OK car c’est agrégé).\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "daily = q(\"\"\"\n",
+        "SELECT\n",
+        "  DATE(pickup_datetime) AS day,\n",
+        "  month,\n",
+        "  COUNT(*) AS trips,\n",
+        "  SUM(total_amount) AS revenue\n",
+        "FROM trips\n",
+        "WHERE month = ANY(:months)\n",
+        "GROUP BY day, month\n",
+        "ORDER BY day;\n",
+        "\"\"\", {\"months\": selected_months})\n",
+        "daily.head()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "fig = px.line(daily, x=\"day\", y=\"trips\", color=\"month\", markers=False, title=\"Courses par jour (comparatif par mois)\")\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### 5.2 Heures de pointe (distribution par heure)\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "hourly = q(\"\"\"\n",
+        "SELECT\n",
+        "  EXTRACT(HOUR FROM pickup_datetime) AS hour,\n",
+        "  month,\n",
+        "  COUNT(*) AS trips,\n",
+        "  AVG(total_amount) AS avg_total\n",
+        "FROM trips\n",
+        "WHERE month = ANY(:months)\n",
+        "GROUP BY hour, month\n",
+        "ORDER BY hour;\n",
+        "\"\"\", {\"months\": selected_months})\n",
+        "hourly.head()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "fig = px.line(hourly, x=\"hour\", y=\"trips\", color=\"month\", markers=True, title=\"Distribution des courses par heure\")\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### 5.3 Jour de semaine (weekday)\n",
+        "Postgres: `EXTRACT(DOW ...)` : 0=Dimanche ... 6=Samedi.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "weekday = q(\"\"\"\n",
+        "SELECT\n",
+        "  EXTRACT(DOW FROM pickup_datetime) AS dow,\n",
+        "  month,\n",
+        "  COUNT(*) AS trips,\n",
+        "  AVG(total_amount) AS avg_total\n",
+        "FROM trips\n",
+        "WHERE month = ANY(:months)\n",
+        "GROUP BY dow, month\n",
+        "ORDER BY dow;\n",
+        "\"\"\", {\"months\": selected_months})\n",
+        "weekday\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "dow_names = {0:\"Sun\",1:\"Mon\",2:\"Tue\",3:\"Wed\",4:\"Thu\",5:\"Fri\",6:\"Sat\"}\n",
+        "weekday[\"dow_name\"] = weekday[\"dow\"].map(dow_names)\n",
+        "fig = px.bar(weekday, x=\"dow_name\", y=\"trips\", color=\"month\", barmode=\"group\", title=\"Courses par jour de semaine\")\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 6) Vendors & Paiements\n",
+        "Deux analyses très attendues dans une soutenance :\n",
+        "- Part de marché par vendor\n",
+        "- Répartition des modes de paiement (et comparaison par mois)\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "vendor_share = q(\"\"\"\n",
+        "SELECT\n",
+        "  t.month,\n",
+        "  v.vendor_name,\n",
+        "  COUNT(*) AS trips\n",
+        "FROM trips t\n",
+        "JOIN vendor v ON t.vendor_id = v.vendor_id\n",
+        "WHERE t.month = ANY(:months)\n",
+        "GROUP BY t.month, v.vendor_name\n",
+        "ORDER BY t.month, trips DESC;\n",
+        "\"\"\", {\"months\": selected_months})\n",
+        "vendor_share.head()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "fig = px.bar(vendor_share, x=\"vendor_name\", y=\"trips\", color=\"month\", barmode=\"group\",\n",
+        "             title=\"Parts de marché Vendor (comparatif par mois)\")\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "pay = q(\"\"\"\n",
+        "SELECT\n",
+        "  t.month,\n",
+        "  p.payment_name,\n",
+        "  COUNT(*) AS trips\n",
+        "FROM trips t\n",
+        "JOIN payment p ON t.payment_type_id = p.payment_type_id\n",
+        "WHERE t.month = ANY(:months)\n",
+        "GROUP BY t.month, p.payment_name\n",
+        "ORDER BY t.month, trips DESC;\n",
+        "\"\"\", {\"months\": selected_months})\n",
+        "pay.head()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "fig = px.bar(pay, x=\"payment_name\", y=\"trips\", color=\"month\", barmode=\"group\",\n",
+        "             title=\"Répartition paiements (comparatif par mois)\")\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 7) Zones & Boroughs (pickups / dropoffs)\n",
+        "On veut :\n",
+        "- Top zones pickup/dropoff\n",
+        "- Comparatif par mois\n",
+        "- Boroughs les plus actifs\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "top_pickup = q(\"\"\"\n",
+        "SELECT\n",
+        "  t.month,\n",
+        "  b.borough_name,\n",
+        "  l.zone_name,\n",
+        "  COUNT(*) AS trips\n",
+        "FROM trips t\n",
+        "JOIN location_table l ON t.pickup_location_id = l.pulocation_id\n",
+        "JOIN borough b ON l.borough_id = b.borough_id\n",
+        "WHERE t.month = ANY(:months)\n",
+        "GROUP BY t.month, b.borough_name, l.zone_name\n",
+        "ORDER BY trips DESC\n",
+        "LIMIT 20;\n",
+        "\"\"\", {\"months\": selected_months})\n",
+        "top_pickup\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "fig = px.bar(top_pickup, x=\"trips\", y=\"zone_name\", color=\"borough_name\", facet_col=\"month\",\n",
+        "             orientation=\"h\", title=\"Top 20 zones PICKUP (sur mois sélectionnés)\")\n",
+        "fig.update_layout(height=600)\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "borough_activity = q(\"\"\"\n",
+        "SELECT\n",
+        "  t.month,\n",
+        "  b.borough_name,\n",
+        "  COUNT(*) AS trips,\n",
+        "  SUM(t.total_amount) AS revenue,\n",
+        "  AVG(t.total_amount) AS avg_total\n",
+        "FROM trips t\n",
+        "JOIN location_table l ON t.pickup_location_id = l.pulocation_id\n",
+        "JOIN borough b ON l.borough_id = b.borough_id\n",
+        "WHERE t.month = ANY(:months)\n",
+        "GROUP BY t.month, b.borough_name\n",
+        "ORDER BY t.month, trips DESC;\n",
+        "\"\"\", {\"months\": selected_months})\n",
+        "borough_activity.head()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "fig = px.bar(borough_activity, x=\"borough_name\", y=\"trips\", color=\"month\", barmode=\"group\",\n",
+        "             title=\"Activité par Borough (PICKUP) – comparatif par mois\")\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 8) Analyse prix: tips, surcharges, outliers raisonnables\n",
+        "Ça donne un gros \"plus\" :\n",
+        "- Tip rate et tip moyen par mois\n",
+        "- Congestion surcharge / airport fee\n",
+        "- Détection rapide d’anomalies\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "tips_month = q(\"\"\"\n",
+        "SELECT\n",
+        "  month,\n",
+        "  100.0 * AVG(CASE WHEN tip_amount > 0 THEN 1 ELSE 0 END) AS tip_rate_pct,\n",
+        "  AVG(tip_amount) AS avg_tip,\n",
+        "  AVG(CASE WHEN total_amount > 0 THEN tip_amount / total_amount END) AS avg_tip_ratio\n",
+        "FROM trips\n",
+        "WHERE month = ANY(:months)\n",
+        "GROUP BY month\n",
+        "ORDER BY month;\n",
+        "\"\"\", {\"months\": selected_months})\n",
+        "tips_month\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "fig = px.line(tips_month, x=\"month\", y=[\"tip_rate_pct\",\"avg_tip\",\"avg_tip_ratio\"], markers=True,\n",
+        "              title=\"Tips – comparatif mensuel\")\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "surcharges = q(\"\"\"\n",
+        "SELECT\n",
+        "  month,\n",
+        "  AVG(congestion_surcharge) AS avg_congestion,\n",
+        "  AVG(airport_fee) AS avg_airport_fee,\n",
+        "  AVG(tolls_amount) AS avg_tolls\n",
+        "FROM trips\n",
+        "WHERE month = ANY(:months)\n",
+        "GROUP BY month\n",
+        "ORDER BY month;\n",
+        "\"\"\", {\"months\": selected_months})\n",
+        "surcharges\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "fig = px.line(surcharges, x=\"month\", y=[\"avg_congestion\",\"avg_airport_fee\",\"avg_tolls\"], markers=True,\n",
+        "              title=\"Surcharges – comparatif mensuel\")\n",
+        "fig.show()\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 9) Requêtes 'dashboard-ready'\n",
+        "\n",
+        "Ces requêtes sont optimisées pour Streamlit et PowerBI :\n",
+        "- Données agrégées (rapides sur ~20M lignes)\n",
+        "- Filtrables par **month**\n",
+        "- Directement réutilisables pour KPI, graphiques et comparatifs\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "# KPI mensuels – volumes & qualité\n",
+        "kpi_month = q(\"\"\"\n",
+        "SELECT\n",
+        "  month,\n",
+        "  COUNT(*) AS trips,\n",
+        "  SUM(total_amount) AS revenue,\n",
+        "  AVG(total_amount) AS avg_total,\n",
+        "  AVG(trip_distance) AS avg_distance,\n",
+        "  100.0 * AVG(CASE WHEN tip_amount > 0 THEN 1 ELSE 0 END) AS tip_rate_pct\n",
+        "FROM trips\n",
+        "WHERE month IS NOT NULL\n",
+        "GROUP BY month\n",
+        "ORDER BY month;\n",
+        "\"\"\")\n",
+        "kpi_month.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "# Parts de marché par vendor\n",
+        "vendor_dashboard = q(\"\"\"\n",
+        "SELECT\n",
+        "  t.month,\n",
+        "  v.vendor_name,\n",
+        "  COUNT(*) AS trips\n",
+        "FROM trips t\n",
+        "JOIN vendor v ON t.vendor_id = v.vendor_id\n",
+        "WHERE t.month IS NOT NULL\n",
+        "GROUP BY t.month, v.vendor_name\n",
+        "ORDER BY t.month, trips DESC;\n",
+        "\"\"\")\n",
+        "vendor_dashboard.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "# Répartition des paiements\n",
+        "payment_dashboard = q(\"\"\"\n",
+        "SELECT\n",
+        "  t.month,\n",
+        "  p.payment_name,\n",
+        "  COUNT(*) AS trips\n",
+        "FROM trips t\n",
+        "JOIN payment p ON t.payment_type_id = p.payment_type_id\n",
+        "WHERE t.month IS NOT NULL\n",
+        "GROUP BY t.month, p.payment_name\n",
+        "ORDER BY t.month, trips DESC;\n",
+        "\"\"\")\n",
+        "payment_dashboard.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {},
+      "outputs": [],
+      "source": [
+        "# Distribution horaire des courses\n",
+        "hourly_dashboard = q(\"\"\"\n",
+        "SELECT\n",
+        "  month,\n",
+        "  EXTRACT(HOUR FROM pickup_datetime) AS hour,\n",
+        "  COUNT(*) AS trips\n",
+        "FROM trips\n",
+        "WHERE month IS NOT NULL\n",
+        "GROUP BY month, hour\n",
+        "ORDER BY month, hour;\n",
+        "\"\"\")\n",
+        "hourly_dashboard.head()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### Recommandation performance (SQL)\n",
+        "\n",
+        "À exécuter **une seule fois** dans PostgreSQL :\n",
+        "- `CREATE INDEX IF NOT EXISTS idx_trips_month ON trips(month);`\n",
+        "- `CREATE INDEX IF NOT EXISTS idx_trips_pickup_datetime ON trips(pickup_datetime);`\n",
+        "- `CREATE INDEX IF NOT EXISTS idx_trips_pickup_loc ON trips(pickup_location_id);`\n"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "name": "python",
+      "version": "3.10"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}

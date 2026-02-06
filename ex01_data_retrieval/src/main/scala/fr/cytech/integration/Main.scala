@@ -5,23 +5,29 @@ import java.net.URL
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
 object Main {
-
   def main(args: Array[String]): Unit = {
 
-    // 1. Téléchargement automatique du fichier parquet
+    if (args.length < 1) {
+      System.err.println("Usage: Main <YYYY-MM> [yellow|green|fhv]")
+      System.exit(1)
+    }
+
+    val month = args(0) // ex: 2025-01
+    val taxiType = if (args.length > 1) args(1) else "yellow"
+
     val parquetUrl =
-      "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-01.parquet"
+      s"https://d37ci6vzurychx.cloudfront.net/trip-data/${taxiType}_tripdata_${month}.parquet"
 
-    val localDir = "data/raw"
-    val localPath = s"$localDir/yellow_tripdata_2025-01.parquet"
-
+    val localDir = "Project/data/raw"
     Files.createDirectories(Paths.get(localDir))
-    new URL(parquetUrl).openStream()
-      .pipe(in => Files.copy(in, Paths.get(localPath), StandardCopyOption.REPLACE_EXISTING))
+    val localPath = s"$localDir/${taxiType}_tripdata_${month}.parquet"
 
-    // 2. SparkSession + configuration MinIO
+    new URL(parquetUrl).openStream().pipe { in =>
+      Files.copy(in, Paths.get(localPath), StandardCopyOption.REPLACE_EXISTING)
+    }
+
     val spark = SparkSession.builder()
-      .appName("NYC Taxi - Automated Ingestion")
+      .appName(s"NYC Taxi - Ex01 Ingestion $taxiType $month")
       .master("local[*]")
       .config("spark.hadoop.fs.s3a.endpoint", "http://localhost:9000")
       .config("spark.hadoop.fs.s3a.access.key", "minio")
@@ -30,20 +36,15 @@ object Main {
       .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
       .getOrCreate()
 
-    // 3. Lecture locale du parquet
     val df = spark.read.parquet(localPath)
 
-    // 4. Écriture vers MinIO
-    df.write
-      .mode("overwrite")
-      .parquet("s3a://nyc-raw/yellow_tripdata_2025-01")
+    // IMPORTANT: garder un chemin stable dans MinIO
+    df.write.mode("overwrite").parquet(s"s3a://nyc-raw/${taxiType}_tripdata_${month}")
 
     spark.stop()
   }
 
-  // Petit helper pour gérsber le stream proprement
   implicit class AutoClose[A <: AutoCloseable](resource: A) {
-    def pipe[B](f: A => B): B =
-      try f(resource) finally resource.close()
+    def pipe[B](f: A => B): B = try f(resource) finally resource.close()
   }
 }

@@ -298,3 +298,13 @@ INSERT INTO Location_table (pulocation_id, zone_name, service_zone, borough_id) 
 (263, 'Yorkville West', 'Yellow Zone', 4),
 (264, 'Unknown', 'Unknown', 7),
 (265, 'Outside of NYC', 'Unknown', 7);
+
+INSERT INTO TimeDimension (year, month, month_name, year_month)
+VALUES
+    (2025, 1, 'January', '2025-01'),
+    (2025, 2, 'February', '2025-02'),
+    (2025, 3, 'March', '2025-03'),
+    (2025, 4, 'April', '2025-04'),
+    (2025, 5, 'May', '2025-05'),
+    (2025, 6, 'June', '2025-06')
+ON CONFLICT (year_month) DO NOTHING;
