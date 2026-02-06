@@ -23,12 +23,17 @@ This project aims to deploy a Big Data architecture to collect, ingest, process 
 ## Dashboard
 
 At first, we used data of only one month, then scaled it to multiple months.
+
+The dashbord of multiple months looks like this: 
+<img width="1791" height="967" alt="image" src="https://github.com/user-attachments/assets/5dea956b-250e-48eb-b977-bf73699676e5" />
+
 The dashbord of one month looks like this after running : 
+
 <img width="1850" height="959" alt="image" src="https://github.com/user-attachments/assets/185faab8-bb81-4b94-a28e-af4afff5684f" />
 <img width="1850" height="959" alt="image" src="https://github.com/user-attachments/assets/c66fe89d-6d24-4b4a-9d51-df5ed5c826fb" />
 
 
-The dashbord of multiple months looks like this: 
+
 ---
 ## Data collection and data integration
 
