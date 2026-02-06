@@ -21,6 +21,14 @@ This project aims to deploy a Big Data architecture to collect, ingest, process 
 10. [6: Airflow Automation](#6-airflow-automation)
 ---
 ## Dashboard
+
+At first, we used data of only one month, then scaled it to multiple months.
+The dashbord of one month looks like this after running : 
+<img width="1850" height="959" alt="image" src="https://github.com/user-attachments/assets/185faab8-bb81-4b94-a28e-af4afff5684f" />
+<img width="1850" height="959" alt="image" src="https://github.com/user-attachments/assets/c66fe89d-6d24-4b4a-9d51-df5ed5c826fb" />
+
+
+The dashbord of multiple months looks like this: 
 ---
 ## Data collection and data integration
 
@@ -220,9 +228,6 @@ If you don't have `uv` installed on your machine:
 ```bash
 # On Mac/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# On Windows (PowerShell)
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
 #### 2. Install Project Dependencies
@@ -230,28 +235,24 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 uv sync
 ```
 
-
-IDE Configuration (IntelliJ IDEA)
+#### 3. IDE Configuration (IntelliJ IDEA)
 To ensure the IDE recognizes the installed libraries (and avoids red underlining), please configure the Python Interpreter:
 
-Go to File > Project Structure > SDKs.
+- Go to **File** > **Project Structure** > **SDKs**.
+- Click "**+**" > **Add Python SDK** > **Virtual Environment**.
+- Select **Existing environment**.
+- In the "**Interpreter**" field, browse and select the python executable located inside your project folder:
+```bash
+# Linux/Mac:
+nyc-taxi-bigdata-pipeline/.venv/bin/python
+```
+- Click **OK** and **Apply**.
 
-Click + > Add Python SDK > Virtual Environment.
-
-Select Existing environment.```
-
-In the "Interpreter" field, browse and select the python executable located inside your project folder:
-
-Linux/Mac: nyc-taxi-bigdata-pipeline/.venv/bin/python
-
-Windows: nyc-taxi-bigdata-pipeline\.venv\Scripts\python.exe
-
-Click OK and Apply.
-
-### 3 Running the Dashboard
+### 4. Running the Dashboard
 ```bash
 uv run streamlit run ex04_dashboard/dashboard.py
 ```
+
 ---
 # 5:Machine Learning Model Implementation
 ---
