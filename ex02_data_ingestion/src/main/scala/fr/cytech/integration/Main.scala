@@ -7,9 +7,14 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    // 1. Création de la SparkSession
+    val months: Seq[String] =
+      if (args.isEmpty) Seq("2025-01")
+      else if (args(0).toUpperCase == "ALL")
+        Seq("2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06")
+      else Seq(args(0))
+
     val spark = SparkSession.builder()
-      .appName("NYC Taxi - Exercice 2 - Branche 1")
+      .appName("NYC Taxi - Exercice 2 - Branch 1 Cleaning")
       .master("local[*]")
       .config("spark.hadoop.fs.s3a.endpoint", "http://localhost:9000")
       .config("spark.hadoop.fs.s3a.access.key", "minio")
@@ -20,28 +25,32 @@ object Main {
 
     spark.sparkContext.setLogLevel("WARN")
 
-    // 2. Lecture du Parquet brut depuis Minio
-    val rawDf = spark.read.parquet(
-      "s3a://nyc-raw/yellow_tripdata_2025-01"
-    )
+    months.foreach { m =>
+      val rawPath   = s"s3a://nyc-raw/yellow_tripdata_$m"
+      val cleanPath = s"s3a://nyc-clean/yellow_tripdata_$m-clean"
 
-    // 3. Nettoyage / validation des données (branche 1)
-    val cleanDf = rawDf
-      .filter(col("passenger_count") >= 1)
-      .filter(col("trip_distance") > 0)
-      .filter(col("fare_amount") > 0)
-      .filter(col("total_amount") > 0)
-      .filter(col("tpep_pickup_datetime") < col("tpep_dropoff_datetime"))
+      println(s"\n=== Cleaning month $m ===")
+      println(s"Reading  : $rawPath")
+      println(s"Writing  : $cleanPath")
 
-    // 4. Écriture du Parquet nettoyé dans Minio
-    cleanDf.write
-      .mode("overwrite")
-      .parquet(
-        "s3a://nyc-clean/yellow_tripdata_2025-01-clean"
-      )
+      val rawDf = spark.read.parquet(rawPath)
 
+      val cleanDf = rawDf
+        .filter(col("passenger_count") >= 1)
+        .filter(col("trip_distance") > 0)
+        .filter(col("fare_amount") > 0)
+        .filter(col("total_amount") > 0)
+        .filter(col("tpep_pickup_datetime") < col("tpep_dropoff_datetime"))
 
-    // 5. Arrêt propre de Spark
+      // Optionnel: petit log de contrôle
+      val inCount  = rawDf.count()
+      val outCount = cleanDf.count()
+      println(s"Records in : $inCount")
+      println(s"Records out: $outCount (rejected: ${inCount - outCount})")
+
+      cleanDf.write.mode("overwrite").parquet(cleanPath)
+    }
+
     spark.stop()
   }
 }

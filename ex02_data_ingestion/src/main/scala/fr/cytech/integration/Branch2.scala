@@ -1,23 +1,21 @@
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 import java.util.Properties
 import org.slf4j.LoggerFactory
-import org.postgresql.Driver
-object Branch2Production {
 
+object Branch2Production {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   def main(args: Array[String]): Unit = {
-    // Validate arguments
     if (args.length < 1) {
       logger.error("Usage: Branch2Production <parquet_path> [jdbc_url] [db_user] [db_password]")
       System.exit(1)
     }
 
     val parquetPath = args(0)
-    val jdbcUrl = if (args.length > 1) args(1) else "jdbc:postgresql://localhost:5432/taxidb"
-    val dbUser = if (args.length > 2) args(2) else "postgres"
-    val dbPassword = if (args.length > 3) args(3) else "postgres"
+    val jdbcUrl     = if (args.length > 1) args(1) else "jdbc:postgresql://localhost:5432/taxidb"
+    val dbUser      = if (args.length > 2) args(2) else "postgres"
+    val dbPassword  = if (args.length > 3) args(3) else "postgres"
 
     val spark = SparkSession.builder()
       .appName("NYC Taxi - Branch 2 - Production Ingestion")
@@ -29,155 +27,136 @@ object Branch2Production {
       .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
       .getOrCreate()
 
-    import spark.implicits._
     spark.sparkContext.setLogLevel("WARN")
 
+    val props = new Properties()
+    props.put("user", dbUser)
+    props.put("password", dbPassword)
+    props.put("driver", "org.postgresql.Driver")
+
     try {
-      // JDBC configuration
-      val connectionProperties = new Properties()
-      connectionProperties.put("user", dbUser)
-      connectionProperties.put("password", dbPassword)
-      connectionProperties.put("driver", "org.postgresql.Driver")
+      logger.info(s"=== Starting ingestion from: $parquetPath ===")
 
-      logger.info(s"=== Starting ingestion from $parquetPath ===")
+      verifyDatabaseConnection(spark, jdbcUrl, props)
+      verifyDimensionTables(spark, jdbcUrl, props)
 
-      // Verify PostgreSQL connectivity
-      verifyDatabaseConnection(spark, jdbcUrl, connectionProperties)
-
-      // Verify that dimension tables exist
-      verifyDimensionTables(spark, jdbcUrl, connectionProperties)
-
-      // Read Parquet file
-      logger.info("Reading Parquet file...")
       val rawDf = spark.read.parquet(parquetPath)
-      val totalRecords = rawDf.count()
-      logger.info(s"Total records to ingest: $totalRecords")
+      val total = rawDf.count()
+      logger.info(s"Total records read: $total")
 
-      // Clean and validate data
+      // cleaning + ajout year_month
       val cleanedDf = cleanAndValidateData(rawDf)
-      val validRecords = cleanedDf.count()
-      logger.info(s"Valid records after cleaning: $validRecords (${totalRecords - validRecords} records rejected)")
+        .withColumn("year_month", date_format(col("tpep_pickup_datetime").cast("timestamp"), "yyyy-MM"))
+        .withColumn("month", col("year_month")) // pour remplir Trips.month
 
-      // Transform for Trips table
-      val tripsDf = prepareTripsData(cleanedDf)
+      val valid = cleanedDf.count()
+      logger.info(s"Valid records after cleaning: $valid (rejected: ${total - valid})")
 
-      // Insert into PostgreSQL
-      logger.info("Starting PostgreSQL insertion...")
-      val startTime = System.currentTimeMillis()
+      // 1) Upsert TimeDimension sur year_month (idempotent)
+      val timeDimDf = buildTimeDimensionByMonth(cleanedDf)
+      upsertTimeDimensionByMonth(spark, jdbcUrl, props, timeDimDf)
+
+      // 2) Reload TimeDimension + join sur year_month
+      val timeDbDf = spark.read.jdbc(jdbcUrl, "TimeDimension", props)
+        .select(col("time_id"), col("year_month"))
+
+      val enrichedTripsDf = cleanedDf
+        .join(timeDbDf, Seq("year_month"), "left")
+        .withColumn("time_id", col("time_id"))
+
+      // 3) Trips dataframe final
+      val tripsDf = prepareTripsData(enrichedTripsDf)
+
+      logger.info("Inserting into Trips...")
+      val start = System.currentTimeMillis()
 
       tripsDf.write
         .mode(SaveMode.Append)
         .option("batchsize", "10000")
         .option("isolationLevel", "READ_COMMITTED")
-        .option("numPartitions", "8") // Parallelization
-        .jdbc(jdbcUrl, "Trips", connectionProperties)
+        .option("numPartitions", "8")
+        .jdbc(jdbcUrl, "Trips", props)
 
-      val endTime = System.currentTimeMillis()
-      val durationSeconds = (endTime - startTime) / 1000.0
+      val end = System.currentTimeMillis()
+      val dur = (end - start) / 1000.0
 
-      logger.info(s"=== Ingestion completed successfully ===")
-      logger.info(s"Records inserted: $validRecords")
-      logger.info(s"Duration: $durationSeconds seconds")
-      logger.info(s"Throughput: ${validRecords / durationSeconds} records/sec")
+      logger.info(s"=== Ingestion DONE ===")
+      logger.info(s"Inserted: ${tripsDf.count()} rows")
+      logger.info(f"Duration: $dur%.2f sec")
 
-    } catch {
-      case e: Exception =>
-        logger.error("Error during ingestion", e)
-        throw e
     } finally {
       spark.stop()
     }
   }
 
-  /**
-   * Verifies PostgreSQL database connection
-   */
   def verifyDatabaseConnection(spark: SparkSession, jdbcUrl: String, props: Properties): Unit = {
-    try {
-      logger.info("Verifying PostgreSQL connection...")
-      val testQuery = "(SELECT 1 as test) AS test_query"
-      spark.read.jdbc(jdbcUrl, testQuery, props).collect()
-      logger.info("✓ PostgreSQL connection established successfully")
-    } catch {
-      case e: Exception =>
-        logger.error("✗ Unable to connect to PostgreSQL", e)
-        throw new RuntimeException("Database connection failed", e)
-    }
+    val testQuery = "(SELECT 1 as test) AS test_query"
+    spark.read.jdbc(jdbcUrl, testQuery, props).collect()
+    logger.info("✓ PostgreSQL OK")
   }
 
-  /**
-   * Verifies that all required dimension tables exist
-   */
   def verifyDimensionTables(spark: SparkSession, jdbcUrl: String, props: Properties): Unit = {
-    logger.info("Verifying existence of dimension tables...")
-
-    val requiredTables = List("Vendor", "RateCode", "Payment", "Borough", "Location_table")
-    val missingTables = scala.collection.mutable.ListBuffer[String]()
-
-    requiredTables.foreach { table =>
+    val requiredTables = List("Vendor", "RateCode", "Payment", "Borough", "Location_table", "TimeDimension", "Trips")
+    val missing = requiredTables.filter { t =>
       try {
-        val query = s"(SELECT COUNT(*) as cnt FROM $table LIMIT 1) AS check_$table"
-        val count = spark.read.jdbc(jdbcUrl, query, props).first().getLong(0)
-        logger.info(s"Table $table exists with $count records")
-
-        if (count == 0) {
-          logger.warn(s" WARNING: Table $table is empty!")
-        }
-      } catch {
-        case e: Exception =>
-          logger.error(s"✗ Table $table does not exist or is inaccessible")
-          missingTables += table
-      }
+        val q = s"(SELECT 1 FROM $t LIMIT 1) AS chk"
+        spark.read.jdbc(jdbcUrl, q, props).count()
+        false
+      } catch { case _: Exception => true }
     }
-
-    if (missingTables.nonEmpty) {
-      val errorMsg = s"Missing tables: ${missingTables.mkString(", ")}. " +
-        "Please run the table creation script (Exercise 3) before launching the ingestion."
-      logger.error(errorMsg)
-      throw new RuntimeException(errorMsg)
-    }
-
-    logger.info("All dimension tables are present")
+    if (missing.nonEmpty) throw new RuntimeException(s"Missing tables: ${missing.mkString(", ")} (run Exercise 3 SQL)")
+    logger.info("✓ Dimension tables OK")
   }
 
-  /**
-   * Cleans and validates raw data
-   */
-  def cleanAndValidateData(df: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
-    logger.info("Cleaning and validating data...")
-
+  def cleanAndValidateData(df: DataFrame): DataFrame = {
     df.filter(
-      // Filter out outliers
       col("trip_distance") >= 0 &&
         col("fare_amount") >= 0 &&
         col("total_amount") >= 0 &&
         col("passenger_count") > 0 &&
-        col("passenger_count") <= 9 && // Reasonable maximum
+        col("passenger_count") <= 9 &&
         col("tpep_pickup_datetime").isNotNull &&
         col("tpep_dropoff_datetime").isNotNull &&
-        col("tpep_dropoff_datetime") >= col("tpep_pickup_datetime") // Dropoff after pickup
+        col("tpep_dropoff_datetime") >= col("tpep_pickup_datetime")
     )
   }
 
-  /**
-   * Prepares data for insertion into Trips table
-   */
-  def prepareTripsData(df: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
-    logger.info("Preparing data for Trips table...")
+  // construit une TimeDimension au niveau mois (year_month)
+  def buildTimeDimensionByMonth(df: DataFrame): DataFrame = {
+    df.select(col("year_month")).distinct()
+      .withColumn("year", substring(col("year_month"), 1, 4).cast("int"))
+      .withColumn("month", substring(col("year_month"), 6, 2).cast("int"))
+      .withColumn("month_name",
+        date_format(to_date(concat(col("year_month"), lit("-01"))), "MMMM")
+      )
+      .select("year", "month", "month_name", "year_month")
+  }
 
+  // upsert idempotent (insert seulement les nouveaux year_month)
+  def upsertTimeDimensionByMonth(spark: SparkSession, jdbcUrl: String, props: Properties, timeDf: DataFrame): Unit = {
+    val existing = spark.read.jdbc(jdbcUrl, "TimeDimension", props).select("year_month").distinct()
+    val toInsert = timeDf.join(existing, Seq("year_month"), "left_anti")
+    val nb = toInsert.count()
+    logger.info(s"TimeDimension new months to insert: $nb")
+    if (nb > 0) {
+      toInsert.write.mode(SaveMode.Append).jdbc(jdbcUrl, "TimeDimension", props)
+    }
+  }
+
+  def prepareTripsData(df: DataFrame): DataFrame = {
     df.select(
-      // Foreign keys
       coalesce(col("VendorID").cast("integer"), lit(0)).as("vendor_id"),
       coalesce(col("RatecodeID").cast("integer"), lit(99)).as("rate_code_id"),
       coalesce(col("payment_type").cast("integer"), lit(5)).as("payment_type_id"),
       coalesce(col("PULocationID").cast("integer"), lit(264)).as("pickup_location_id"),
       coalesce(col("DOLocationID").cast("integer"), lit(264)).as("dropoff_location_id"),
 
-      // Timestamps
       col("tpep_pickup_datetime").cast("timestamp").as("pickup_datetime"),
       col("tpep_dropoff_datetime").cast("timestamp").as("dropoff_datetime"),
 
-      // Measures
+      col("time_id").cast("integer").as("time_id"),
+      col("month").cast("string").as("month"),
+
       coalesce(col("passenger_count").cast("integer"), lit(1)).as("passenger_count"),
       col("trip_distance").cast("float").as("trip_distance"),
       col("fare_amount").cast("float").as("fare_amount"),
