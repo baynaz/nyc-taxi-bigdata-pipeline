@@ -97,3 +97,6 @@ __pycache__/
 
 # MinIO client binary
 mc
+
+# ML artifacts
+artifacts/
