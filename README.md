@@ -266,4 +266,5 @@ uv run streamlit run ex04_dashboard/dashboard.py
 ---
 # 6:Airflow Automation
 <img width="1842" height="529" alt="image (3)" src="https://github.com/user-attachments/assets/159546f9-0350-434f-89ff-385c2a24c6ab" />
-<img width="1842" height="529" alt="image (3)" src="https://github.com/user-attachments/assets/159546f9-0350-434f-89ff-385c2a24c6ab" />
+<img width="1837" height="1013" alt="image" src="https://github.com/user-attachments/assets/957fb1aa-72e4-49e7-bcfa-82eab1069a25" />
+
