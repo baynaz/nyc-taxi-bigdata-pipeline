@@ -32,6 +32,9 @@ The dashbord of one month looks like this after running :
 <img width="1850" height="959" alt="image" src="https://github.com/user-attachments/assets/185faab8-bb81-4b94-a28e-af4afff5684f" />
 <img width="1850" height="959" alt="image" src="https://github.com/user-attachments/assets/c66fe89d-6d24-4b4a-9d51-df5ed5c826fb" />
 
+## Video demonstration of our dashboard:
+https://github.com/user-attachments/assets/185f5c40-ae4b-43ab-b70d-1c174dc93ccd
+
 
 
 ---
