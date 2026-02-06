@@ -265,6 +265,33 @@ uv run streamlit run ex04_dashboard/dashboard.py
 # 5:Machine Learning Model Implementation
 ---
 # 6:Airflow Automation
-<img width="1842" height="529" alt="image (3)" src="https://github.com/user-attachments/assets/159546f9-0350-434f-89ff-385c2a24c6ab" />
-<img width="1837" height="1013" alt="image" src="https://github.com/user-attachments/assets/957fb1aa-72e4-49e7-bcfa-82eab1069a25" />
 
+The pipeline performs two main steps:
+1.  **Data Cleaning**: Spark cleans raw yellow taxi data.
+2.  **Ingestion**: Spark ingests the cleaned data into a PostgreSQL Data Warehouse.
+
+## Architecture
+* **Airflow**: Scheduler & Webserver (Orchestrator).
+* **Spark Master/Workers**: Execution engine for heavy processing.
+* **PostgreSQL**: Data Warehouse & Airflow Metadata DB.
+* **Docker**: All services run in containers.
+
+## Prerequisites
+Before running the pipeline, ensure you have:
+* **Docker & Docker Compose** installed.
+* **SBT** (Scala Build Tool) installed on your host machine (to compile the JAR).
+* **Java (JDK 8 or 11)** installed on your host machine.
+
+## Setup & Installation Guide
+
+### 1. Compile the Spark Application
+We use `spark-submit` to run the jobs inside Docker. First, you must compile the Scala code on your local machine:
+
+```bash
+cd work-dir/ex02_data_ingestion
+sbt package
+```
+This is what our Airflow Interface looks like: 
+<img width="1842" height="529" alt="image (3)" src="https://github.com/user-attachments/assets/159546f9-0350-434f-89ff-385c2a24c6ab" />
+This is the issue we were facing: 
+<img width="1837" height="1013" alt="image" src="https://github.com/user-attachments/assets/957fb1aa-72e4-49e7-bcfa-82eab1069a25" />
