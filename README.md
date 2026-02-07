@@ -378,4 +378,5 @@ This code automatically handles:
 - Automatic detection of the .jar file (regardless of its name or Scala version).
 - Injection of S3 dependencies (hadoop-aws) to prevent ClassNotFoundException
 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/e2a8cc9e-7a5e-4501-97c0-9ad9a2a6136d" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1fe452d8-a588-4d5c-851e-11334015884d" />
+
