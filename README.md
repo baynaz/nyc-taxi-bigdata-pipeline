@@ -352,5 +352,11 @@ Click on the **nyc_taxi_pipeline** name, then go to the **Graph** tab. You shoul
 
 <img width="1842" height="529" alt="image (3)" src="https://github.com/user-attachments/assets/159546f9-0350-434f-89ff-385c2a24c6ab" />
 This is the issue we were facing: 
-<img width="1140" height="576" alt="image" src="https://github.com/user-attachments/assets/d51c82f8-124a-499b-aa1a-adc390f7c22a" />
+<img width="1837" height="1013" alt="image" src="https://github.com/user-attachments/assets/7b738a62-9561-42ab-9717-606bd6f2fb7a" />
+To deal with this issue we prepared this troubleshooting steps:
 
+
+
+
+ 
+ 
