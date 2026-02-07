@@ -299,12 +299,12 @@ Train and deploy a regression model to predict total_amount for taxi trips.
  - Algorithm: HistGradientBoostingRegressor
  - Target: total_amount
  - Features:
-     *trip distance
-     *trip duration
-     *speed (mph)
-     *passenger count
-     *hour, weekday, weekend, month
-     *vendor, rate code, payment type, pickup/dropoff zones
+     -trip distance
+     -trip duration
+     -speed (mph)
+     -passenger count
+     -hour, weekday, weekend, month
+     -vendor, rate code, payment type, pickup/dropoff zones
  - Split:
      *Temporal split when pickup datetime is available
  - Metrics:
