@@ -50,6 +50,13 @@ https://github.com/user-attachments/assets/185f5c40-ae4b-43ab-b70d-1c174dc93ccd
 ## Data collection and data integration
 
 - **Data source**: NYC Taxi & Limousine Commission (Parquet files) https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+- **Format**: Parquet
+- **Period**:
+  - Baseline: January 2025
+  - Extended: January → June 2025
+- **Scale**:
+  - ~20M trips ingested in PostgreSQL
+  - ~500k rows sampled for ML training
 - **Processing engine**: Apache Spark (Scala)
 - **Data Lake**: MinIO (S3-compatible storage)
 - **Local orchestration**: Docker Compose
@@ -134,14 +141,20 @@ docker ps
 4. Mark **ex01_data_retrieval/src/main/scala** as Sources Root:
    - On intellij interface, go to **ex01_data_retrieval/src/main/scala**,
    - right click, select **Mark Directory as**, select **Sources Root**
-5. Run run_ex01.sh
+5. Run run_ex01.sh for the baseline version (January 2025 only)
 ```bash
 cd nyc-taxi-bigdata-pipeline/ex01_data_retrieval
 chmod +x run_ex01.sh
 ./run_ex01.sh
 run
 ```
-6. Fixing IllegalAccessError in IntelliJ
+6. Run run_ex01_all.sh for the extended version (January to June 2025)
+```bash
+cd ex01_data_retrieval
+./run_ex01_all.sh
+```
+
+7. Fixing IllegalAccessError in IntelliJ
 If you encounter IllegalAccessError in IntelliJ, you need to add an extra VM option:
 - Click on the three vertical dots in your run/debug configuration.
 - From the dropdown Modify Options, select Add VM Option.
@@ -162,8 +175,14 @@ Run run_ex02.sh
 
 ```bash
 cd nyc-taxi-bigdata-pipeline/ex02_data_ingestion
+# baseline version: 
 chmod +x run_ex02_branch1.sh
 ./run_ex02_branch1.sh
+run
+
+#extended version:
+chmod +x run_ex02_branch_all.sh
+./run_ex02_branch_all.sh
 run
 ```
 You should see a new bucket nyc-clean on your minio session.
