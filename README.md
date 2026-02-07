@@ -270,27 +270,55 @@ The pipeline performs two main steps:
 1.  **Data Cleaning**: Spark cleans raw yellow taxi data.
 2.  **Ingestion**: Spark ingests the cleaned data into a PostgreSQL Data Warehouse.
 
-## Architecture
+### The Architecture
 * **Airflow**: Scheduler & Webserver (Orchestrator).
 * **Spark Master/Workers**: Execution engine for heavy processing.
 * **PostgreSQL**: Data Warehouse & Airflow Metadata DB.
 * **Docker**: All services run in containers.
 
-## Prerequisites
-Before running the pipeline, ensure you have:
-* **Docker & Docker Compose** installed.
-* **SBT** (Scala Build Tool) installed on your host machine (to compile the JAR).
-* **Java (JDK 8 or 11)** installed on your host machine.
-
-## Setup & Installation Guide
+### Setup & Installation Guide
 
 ### 1. Compile the Spark Application
 We use `spark-submit` to run the jobs inside Docker. First, you must compile the Scala code on your local machine:
-
 ```bash
 cd work-dir/ex02_data_ingestion
 sbt package
 ```
+#### Success Check
+Ensure you see `[success]` and that the file `nyc-taxi-ingestion_2.12-1.0.jar` is created in `target/scala-2.12/`.
+
+### 2. Fix Permissions (Crucial Step)
+Airflow runs as a non-root user inside the container.  
+You must grant read/write permissions to the logs and configuration folders, and allow Airflow to communicate with the Docker Daemon.  
+Run these commands from the project root:
+```bash
+# 1. Allow Airflow to write logs
+sudo chmod -R 777 dags logs plugins
+# 2. Allow Airflow to trigger Docker containers (Fixes "Permission Denied" on socket)
+sudo chmod 666 /var/run/docker.sock
+```
+### 3. Start the Infrastructure
+Build and start the containers:
+```bash
+docker compose up -d --build
+```
+### Running the Pipeline
+#### 1. Access the Interface
+Open your browser and go to: http://localhost:8080
+
+Username: admin
+Password: admin
+
+#### 2. Trigger the DAG
+- Find the DAG named **nyc_taxi_pipeline**
+- Toggle the switch to Unpause (OFF → ON / Blue)
+- Click the Play Button (▷) on the right side of the row → Trigger DAG
+
+#### 3. Monitor Execution
+Click on the **nyc_taxi_pipeline** name, then go to the **Graph** tab. You should see the tasks turn Green sequentially:
+<img width="138" height="75" alt="image" src="https://github.com/user-attachments/assets/a77954db-0a99-497c-a3b5-999647655481" />
+
+
 This is what our Airflow Interface looks like: 
 <img width="1842" height="529" alt="image (3)" src="https://github.com/user-attachments/assets/159546f9-0350-434f-89ff-385c2a24c6ab" />
 This is the issue we were facing: 
