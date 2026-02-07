@@ -227,7 +227,7 @@ To confirm that the Data Warehouse is correctly initialized:
 
 This module provides an interactive dashboard to analyze the NYC Taxi data stored in the PostgreSQL Data Warehouse. It visualizes Key Performance Indicators (KPIs), vendor market shares, payment methods, and top pickup locations.
 
-### 🛠️ Technical Stack
+### Technical Stack
 * **Language:** Python 3.10+
 * **Framework:** Streamlit
 * **Visualization:** Plotly Express
@@ -328,7 +328,6 @@ Click on the **nyc_taxi_pipeline** name, then go to the **Graph** tab. You shoul
 <img width="138" height="75" alt="image" src="https://github.com/user-attachments/assets/a77954db-0a99-497c-a3b5-999647655481" />
 
 
-This is what our Airflow Interface looks like: 
 <img width="1842" height="529" alt="image (3)" src="https://github.com/user-attachments/assets/159546f9-0350-434f-89ff-385c2a24c6ab" />
 This is the issue we were facing: 
 <img width="1140" height="576" alt="image" src="https://github.com/user-attachments/assets/d51c82f8-124a-499b-aa1a-adc390f7c22a" />
