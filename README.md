@@ -1,7 +1,16 @@
 # NYC Taxi Big Data Pipeline
 
 Big Data Project 
-This project aims to deploy a Big Data architecture to collect, ingest, process and exploit NYC Yellow Taxi data.
+This project aims to deploy a Big Data architecture to collect, ingest, process and exploit NYC Yellow Taxi data. This work is done by :
+## Contributors
+
+Special thanks to:
+- @baynaz : Zaynab Merimi 
+- @tassatig : Tasnim Atig
+- @sekou2109 : Sékou Bah
+- @hadjuse : Hadj Rabearimanana
+- @nousselm : Noussayba El Marrakchi
+
 
 ---
 
@@ -322,4 +331,5 @@ Click on the **nyc_taxi_pipeline** name, then go to the **Graph** tab. You shoul
 This is what our Airflow Interface looks like: 
 <img width="1842" height="529" alt="image (3)" src="https://github.com/user-attachments/assets/159546f9-0350-434f-89ff-385c2a24c6ab" />
 This is the issue we were facing: 
-<img width="1837" height="1013" alt="image" src="https://github.com/user-attachments/assets/957fb1aa-72e4-49e7-bcfa-82eab1069a25" />
+<img width="1140" height="576" alt="image" src="https://github.com/user-attachments/assets/d51c82f8-124a-499b-aa1a-adc390f7c22a" />
+
