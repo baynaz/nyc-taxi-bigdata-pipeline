@@ -378,5 +378,95 @@ This code automatically handles:
 - Automatic detection of the .jar file (regardless of its name or Scala version).
 - Injection of S3 dependencies (hadoop-aws) to prevent ClassNotFoundException
 
+'''Python
+
+    # Task 2: Cleaning (Robust Configuration)    run_nettoyage_donnees = BashOperator(        task_id='nettoyage',
+        bash_command="""
+        # 1. Force API version for host/container compatibility
+        export DOCKER_API_VERSION=1.43 && \
+        
+        echo " Automatically searching for compiled JAR..." && \
+        # 2. Dynamically find the first .jar in the target folder (independent of Scala version)
+        JAR_PATH=$(docker exec spark-master find /opt/spark/work-dir -name "*.jar" | grep "target/scala" | head -n 1) && \
+        
+        # Safety check: Verify if the jar exists
+        if [ -z "$JAR_PATH" ]; then 
+            echo " CRITICAL ERROR: JAR not found!"; 
+            echo " Did you remember to run 'sbt package' in ex02_data_ingestion?"; 
+            exit 1; 
+        fi && \
+        
+        echo " JAR found: $JAR_PATH" && \
+        echo " Starting cleaning process..." && \
+
+        # 3. Run spark-submit with required S3 packages
+        docker exec -i spark-master bash -c "/opt/spark/bin/spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.4 --class fr.cytech.integration.Main $JAR_PATH ALL"
+        """    )
+    # Task 3: Ingestion (Robust Configuration)
+    run_ingestion = BashOperator(
+        task_id='ingestion_vers_postgres',
+        bash_command="""
+        export DOCKER_API_VERSION=1.43 && \
+        
+        # Dynamic JAR search (same as above)
+        JAR_PATH=$(docker exec spark-master find /opt/spark/work-dir -name "*.jar" | grep "target/scala" | head -n 1) && \
+        
+        if [ -z "$JAR_PATH" ]; then echo " ERROR: JAR not found. Please run 'sbt package'."; exit 1; fi && \
+        
+        echo " Starting ingestion to Postgres..." && \
+        docker exec -i spark-master bash -c "/opt/spark/bin/spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.4 --class fr.cytech.integration.Branch2Production $JAR_PATH s3a://nyc-clean/yellow_tripdata_*-clean"
+        """
+    )
+ '''
+With a similar configuration, it seemed like we succeeded to run the scond step o- f nettoyage (cleaning) 
+
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1fe452d8-a588-4d5c-851e-11334015884d" />
+
+However, after nearly 15 to 20 minutes of execution, it failed again :
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/2585eedb-2cda-4fbf-9a18-ddb12604c01b" />
+
+We looked for the issue behind this failure and it seemed that it was a "Connection Refused (Localhost vs. MinIO)" error :
+##### Common Error: Connection Refused (Localhost vs. MinIO)
+This is the most common error when moving from local development (IntelliJ) to Docker.
+The Error:
+'''
+Connect to localhost:9000 ... failed: Connection refused
+'''
+
+##### The Diagnosis: Docker Networking
+In your Scala code, Spark is configured to connect to MinIO via http://localhost:9000.
+On your PC (Local): It works because MinIO is running on your machine, so "localhost" is valid.
+Inside Docker (Airflow/Spark): It fails. Why? Because inside the spark-master container, "localhost" refers to the container itself, not your computer. The container cannot see MinIO at that address.
+To fix this, Spark must use the service name defined in docker-compose.yml, which is minio.
+##### The Solution
+You must update the connection URL in your source code and recompile.
+**Step 1: Update Scala Code**
+Open your Scala project (located in ex02_data_ingestion/src/main/scala/...).
+Search for Main.scala (and potentially Branch2Production.scala). Find the line where the S3/MinIO endpoint is configured:
+Scala
+ 
+''' Scala
+// OLD (Works locally only)spark.conf.set("fs.s3a.endpoint", "http://localhost:9000")
+'''
+Replace '''localhost''' with '''minio''':
+ 
+''' Scala
+// NEW (Works inside Docker)spark.conf.set("fs.s3a.endpoint", "http://minio:9000")
+'''
+*(Apply this change everywhere this configuration appears).*
+
+**Step 2: Recompile (Mandatory)**
+Since the code has changed, the previous .jar file is outdated. You must regenerate it so Docker picks up the new URL.
+'''Bash
+cd ex02_data_ingestion
+sbt package
+'''
+*(Wait for the [success] message).*
+**Step 3: Rerun Airflow**
+Go to the Airflow UI.
+Click on the failed nettoyage task (red box).
+Click Clear -> OK.
+Spark will now connect to http://minio:9000 (the correct internal Docker address), and the task will succeed! 
+
 
