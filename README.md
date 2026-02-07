@@ -296,24 +296,26 @@ In the streamlit interface, filter month = 2025-01 for the baseline version and 
 ## Objective
 Train and deploy a regression model to predict total_amount for taxi trips.
 ## Model & Features
- - Algorithm: HistGradientBoostingRegressor
- - Target: total_amount
- - Features:
-     -trip distance
-     -trip duration
-     -speed (mph)
-     -passenger count
-     -hour, weekday, weekend, month
-     -vendor, rate code, payment type, pickup/dropoff zones
- - Split:
-     *Temporal split when pickup datetime is available
- - Metrics:
-     *RMSE
-     *MAE
-     *R²
-     *MAPE
- **Note**: *MAX_ROWS is a global cap applied across all loaded parquet files.*
-*MAX_ROWS limits the total number of rows used for training (not per parquet file).*
+- **Algorithm**: `HistGradientBoostingRegressor`
+- **Target**: `total_amount`
+- **Features**:
+  - trip distance
+  - trip duration
+  - speed (mph)
+  - passenger count
+  - hour, weekday, weekend, month
+  - vendor, rate code, payment type, pickup / dropoff zones
+- **Split**:
+  - Temporal split when pickup datetime is available
+- **Metrics**:
+  - RMSE
+  - MAE
+  - R²
+  - MAPE
+
+**Note**:  
+*`MAX_ROWS` is a global cap applied across all loaded parquet files.*  
+*It limits the total number of rows used for training (not per parquet file).*
 
 ```bash
 #Baseline training
