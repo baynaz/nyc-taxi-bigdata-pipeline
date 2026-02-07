@@ -190,7 +190,7 @@ You should see a new bucket nyc-clean on your minio session.
 You should execute part 3 bellow before doing this part.
 ```bash
 cd nyc-taxi-bigdata-pipeline/ex02_data_ingestion
-chmod +x run_branch2/sh
+chmod +x run_branch2.sh
 ./run_branch2.sh s3a://nyc-clean/yellow_tripdata_2025-01-clean
 run
 ```
@@ -286,11 +286,14 @@ nyc-taxi-bigdata-pipeline/.venv/bin/python
 
 ### 4. Running the Dashboard
 ```bash
-uv run streamlit run ex04_dashboard/dashboard.py
+cd ex04_dashboard
+uv run streamlit run dashboard.py
 ```
+In the streamlit interface, filter month = 2025-01 for the baseline version and months from 2025-01 → 2025-06 for the extended version.
 
 ---
 # 5:Machine Learning Model Implementation
+
 ---
 # 6:Airflow Automation
 
