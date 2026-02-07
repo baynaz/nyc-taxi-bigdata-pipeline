@@ -446,12 +446,14 @@ Search for Main.scala (and potentially Branch2Production.scala). Find the line w
 Scala
  
 ``` Scala
-// OLD (Works locally only)spark.conf.set("fs.s3a.endpoint", "http://localhost:9000")
+// OLD (Works locally only)
+spark.conf.set("fs.s3a.endpoint", "http://localhost:9000")
 ```
 Replace ```localhost``` with ```minio```:
  
 ``` Scala
-// NEW (Works inside Docker)spark.conf.set("fs.s3a.endpoint", "http://minio:9000")
+// NEW (Works inside Docker)
+spark.conf.set("fs.s3a.endpoint", "http://minio:9000")
 ```
 *(Apply this change everywhere this configuration appears).*
 
