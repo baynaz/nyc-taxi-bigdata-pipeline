@@ -292,7 +292,74 @@ uv run streamlit run dashboard.py
 In the streamlit interface, filter month = 2025-01 for the baseline version and months from 2025-01 → 2025-06 for the extended version.
 
 ---
-# 5:Machine Learning Model Implementation
+# 5:Machine Learning Model Implementation and Prediction service
+## Objective
+Train and deploy a regression model to predict total_amount for taxi trips.
+## Model & Features
+ - Algorithm: HistGradientBoostingRegressor
+ - Target: total_amount
+ - Features:
+     *trip distance
+     *trip duration
+     *speed (mph)
+     *passenger count
+     *hour, weekday, weekend, month
+     *vendor, rate code, payment type, pickup/dropoff zones
+ - Split:
+     *Temporal split when pickup datetime is available
+ - Metrics:
+     *RMSE
+     *MAE
+     *R²
+     *MAPE
+ **Note**: *MAX_ROWS is a global cap applied across all loaded parquet files.*
+*MAX_ROWS limits the total number of rows used for training (not per parquet file).*
+
+```bash
+#Baseline training
+cd ex05_ml_prediction_service
+MAX_ROWS=83000 python -m src.main
+
+#Extended training (January → June 2025)
+cd ex05_ml_prediction_service
+MAX_ROWS=500000 python -m src.main
+```
+## Artifacts:
+```pgsql
+artifacts/
+├── model.joblib
+└── metrics.json
+```
+## Run predictions
+```bash
+#Example (February 2025):
+PREDICT_PARQUET=../ex01_data_retrieval/data/raw/yellow_tripdata_2025-02.parquet \
+N_PRED=100 \
+python -m src.predict
+```
+## Output:
+```bash
+artifacts/predictions.csv
+```
+
+## Fully reproducible ML pipeline
+```bash
+cd ex05_ml_prediction_service
+chmod +x run_ex05.sh
+./run_ex05.sh
+```
+
+## This script:
+ - Runs unit tests
+ - Trains the model
+ - Saves evaluation metrics
+ - Runs predictions
+
+## Unit Tests
+```bash
+cd ex05_ml_prediction_service
+python -m unittest discover -s test -p "test_*.py"
+```
 
 ---
 # 6:Airflow Automation
