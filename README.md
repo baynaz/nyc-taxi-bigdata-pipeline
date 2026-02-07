@@ -355,8 +355,27 @@ This is the issue we were facing:
 <img width="1837" height="1013" alt="image" src="https://github.com/user-attachments/assets/7b738a62-9561-42ab-9717-606bd6f2fb7a" />
 To deal with this issue we prepared this troubleshooting steps:
 
+## Troubleshooting & Robust Installation Guide (Airflow/Spark)
+This guide helps resolve common errors encountered when deploying the pipeline on different machines (permission errors, different Scala versions, missing JAR files, Docker API incompatibility).
+### Mandatory Prerequisites
+Before running the pipeline on your machine, follow these two steps to avoid 99% of errors.
+#### 1. Compile the Scala CodeThe Spark container needs the compiled `.jar` file. It does not create it itself; you must generate it locally.
+```bash
+# Navigate to the ingestion module folder
+cd ex02_data_ingestion
+# Compile the project (generates the .jar in target/)
+sbt package
+```
+### 2. Fix Docker Permissions (Linux/Mac)
+Airflow needs access to your host machine's Docker socket to spin up Spark containers. If you encounter a permission denied error, run:
+```Bash
+sudo chmod 666 /var/run/docker.sock
+```
+### 3. DAG Configuration (Universal Solution)
+Replace the content o- f the nettoyage (cleaning) and ingestion tasks in your *dags/nyc_taxi_pipeline.py* file with the code below.
+This code automatically handles:
+- Docker API compatibility (avoids client version is too new errors).
+- Automatic detection of the .jar file (regardless of its name or Scala version).
+- Injection of S3 dependencies (hadoop-aws) to prevent ClassNotFoundException
 
-
-
- 
- 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/e2a8cc9e-7a5e-4501-97c0-9ad9a2a6136d" />
